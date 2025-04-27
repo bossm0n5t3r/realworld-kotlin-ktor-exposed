@@ -13,6 +13,8 @@ logback-version = "1.5.18"
 ktlint-gradle-version = "12.2.0"
 ktlint-version = "1.5.0"
 
+mockk-version = "1.14.0"
+
 [libraries]
 # Ktor
 ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor-version" }
@@ -51,6 +53,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 
 # Testing
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk-version" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }

@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.logback.classic)
 
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.mockk)
 }
 
 ktlint {
