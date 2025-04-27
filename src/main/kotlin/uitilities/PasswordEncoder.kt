@@ -8,6 +8,11 @@ import javax.crypto.spec.PBEKeySpec
 interface PasswordEncoder {
     fun generateHexEncodedSalt(): String
 
+    fun hashPassword(
+        password: String,
+        salt: String,
+    ): String
+
     fun encode(rawPassword: String): Pair<String, String>
 
     fun matches(
@@ -32,7 +37,7 @@ class PasswordEncoderImpl : PasswordEncoder {
         return salt.toHexString()
     }
 
-    private fun hashPassword(
+    override fun hashPassword(
         password: String,
         hexEncodedSalt: String,
     ): String {
