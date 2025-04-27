@@ -43,6 +43,8 @@ dependencies {
     implementation(libs.koin.ktor)
 
     implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.java.time)
     implementation(libs.exposed.jdbc)
     implementation(libs.h2)
     implementation(libs.hikari.cp)
