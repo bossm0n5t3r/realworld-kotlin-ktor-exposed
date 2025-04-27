@@ -1,6 +1,7 @@
 package me.bossm0n5t3r.uitilities
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -64,5 +65,32 @@ class PasswordEncoderTest {
 
         // Then the result should be false
         assertFalse(matchesWithDifferentPassword)
+    }
+
+    @Test
+    fun testHashPassword() {
+        // Given a password and salt
+        val password = "password123"
+        val salt = passwordEncoder.generateHexEncodedSalt()
+
+        // When hashing the password
+        val hashedPassword = passwordEncoder.hashPassword(password, salt)
+
+        // Then the hashed password should not be empty
+        assertTrue(hashedPassword.isNotEmpty())
+
+        // And hashing the same password with the same salt should produce the same result (deterministic)
+        val sameHashedPassword = passwordEncoder.hashPassword(password, salt)
+        assertEquals(hashedPassword, sameHashedPassword)
+
+        // And hashing a different password with the same salt should produce a different result
+        val differentPassword = "differentPassword"
+        val differentHashedPassword = passwordEncoder.hashPassword(differentPassword, salt)
+        assertNotEquals(hashedPassword, differentHashedPassword)
+
+        // And hashing the same password with a different salt should produce a different result
+        val differentSalt = passwordEncoder.generateHexEncodedSalt()
+        val hashedPasswordWithDifferentSalt = passwordEncoder.hashPassword(password, differentSalt)
+        assertNotEquals(hashedPassword, hashedPasswordWithDifferentSalt)
     }
 }
