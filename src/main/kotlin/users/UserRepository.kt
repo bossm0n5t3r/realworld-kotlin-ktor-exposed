@@ -1,0 +1,45 @@
+package me.bossm0n5t3r.users
+
+import me.bossm0n5t3r.configurations.DatabaseManager
+import java.util.UUID
+
+class UserRepository(
+    private val databaseManager: DatabaseManager,
+) {
+    suspend fun createUser(
+        username: String,
+        email: String,
+        hashedPassword: String,
+        salt: String,
+    ) = databaseManager.dbQuery {
+        UserEntity
+            .new {
+                this.username = username
+                this.email = email
+                this.hashedPassword = hashedPassword
+                this.salt = salt
+            }.let { UserDto(it) }
+    }
+
+    suspend fun findAllUsersByEmail(email: String) =
+        databaseManager.dbQuery {
+            UserEntity.find { Users.email eq email }.map { UserDto(it) }
+        }
+
+    suspend fun findAllUsersByUsername(username: String) =
+        databaseManager.dbQuery {
+            UserEntity.find { Users.username eq username }.map { UserDto(it) }
+        }
+
+    suspend fun getUserEntityById(id: String): UserEntity {
+        val uuid = UUID.fromString(id)
+        return databaseManager.dbQuery { requireNotNull(UserEntity.findById(uuid)) { "Not found user by id $id" } }
+    }
+
+    suspend fun getAllUsers() = databaseManager.dbQuery { UserEntity.all().map { UserDto(it) } }
+
+    suspend fun updateUser(userEntity: UserEntity): UserDto {
+        databaseManager.dbQuery { userEntity.flush() }
+        return UserDto(userEntity)
+    }
+}
