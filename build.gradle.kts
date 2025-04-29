@@ -51,8 +51,12 @@ dependencies {
 
     implementation(libs.logback.classic)
 
-    testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.kotlin.test.junit5)
     testImplementation(libs.mockk)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 ktlint {
