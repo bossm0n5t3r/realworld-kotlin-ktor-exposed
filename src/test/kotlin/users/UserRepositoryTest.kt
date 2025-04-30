@@ -48,7 +48,7 @@ class UserRepositoryTest {
         }
 
     @Test
-    fun testFindAllUsersByEmail() =
+    fun testFindUserEntityByEmail() =
         runBlocking {
             // Given
             val username = "testuser"
@@ -58,12 +58,12 @@ class UserRepositoryTest {
             userRepository.createUser(username, email, hashedPassword, salt)
 
             // When
-            val users = userRepository.findAllUsersByEmail(email)
+            val userEntity = userRepository.findUserEntityByEmail(email)
 
             // Then
-            assertEquals(1, users.size)
-            assertEquals(username, users[0].username)
-            assertEquals(email, users[0].email)
+            assertNotNull(userEntity)
+            assertEquals(username, userEntity.username)
+            assertEquals(email, userEntity.email)
         }
 
     @Test
