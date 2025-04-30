@@ -21,9 +21,9 @@ class UserRepository(
             }.let { UserDto(it) }
     }
 
-    suspend fun findAllUsersByEmail(email: String) =
+    suspend fun findUserEntityByEmail(email: String) =
         databaseManager.dbQuery {
-            UserEntity.find { Users.email eq email }.map { UserDto(it) }
+            UserEntity.find { Users.email eq email }.firstOrNull()
         }
 
     suspend fun findAllUsersByUsername(username: String) =
