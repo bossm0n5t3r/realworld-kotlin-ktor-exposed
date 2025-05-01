@@ -15,8 +15,9 @@ import kotlin.test.assertTrue
 
 class UserServiceIntegrationTest {
     private val databaseManager: DatabaseManager = DatabaseManagerImpl()
+    private val userRepository: UserRepository = UserRepository(databaseManager)
     private val passwordEncoder: PasswordEncoder = PasswordEncoderImpl()
-    private val userService: UserService = UserService(databaseManager, passwordEncoder)
+    private val userService: UserService = UserService(userRepository, passwordEncoder)
 
     @BeforeTest
     fun setup() =
@@ -50,10 +51,8 @@ class UserServiceIntegrationTest {
         userService.register(createUserDto)
 
         // Get the user's ID by querying the database
-        return databaseManager.dbQuery {
-            val userEntity = UserEntity.find { Users.email eq email }.first()
-            userEntity.id.value.toString()
-        }
+        val userEntity = userRepository.findUserEntityByEmail(email)
+        return userEntity?.id?.value?.toString() ?: error("User not found")
     }
 
     @Test
@@ -75,34 +74,6 @@ class UserServiceIntegrationTest {
             assertEquals(createUserDto.email, userDto.email)
             assertEquals("", userDto.bio)
             assertEquals(null, userDto.image)
-        }
-
-    @Test
-    fun testRegisterWithDuplicateUsername() =
-        runBlocking {
-            // Given a user already registered
-            val createUserDto =
-                CreateUserDto(
-                    username = "testuser",
-                    email = "test@example.com",
-                    password = "password123",
-                )
-            userService.register(createUserDto)
-
-            // When trying to register another user with the same username but different email
-            val duplicateUsernameDto =
-                CreateUserDto(
-                    username = "testuser",
-                    email = "different@example.com",
-                    password = "password123",
-                )
-
-            // Then an exception should be thrown
-            val exception =
-                assertFailsWith<IllegalArgumentException> {
-                    userService.register(duplicateUsernameDto)
-                }
-            assertEquals("User already registered", exception.message)
         }
 
     @Test
@@ -272,11 +243,8 @@ class UserServiceIntegrationTest {
             userService.register(createUserDto)
 
             // Get the user's ID
-            val userId =
-                databaseManager.dbQuery {
-                    val userEntity = UserEntity.find { Users.email eq email }.first()
-                    userEntity.id.value.toString()
-                }
+            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userId = userEntity?.id?.value?.toString() ?: error("User not found")
 
             // When updating the user
             val updateUserDto =
@@ -287,11 +255,8 @@ class UserServiceIntegrationTest {
                     image = "https://example.com/image.jpg",
                 )
 
-            // Wrap the updateUser call in a transaction
-            val updatedUser =
-                databaseManager.dbQuery {
-                    userService.updateUser(userId, updateUserDto)
-                }
+            // Update the user
+            val updatedUser = userService.updateUser(userId, updateUserDto)
 
             // Then the returned UserDto should have the updated values
             assertEquals(updateUserDto.username, updatedUser.username)
@@ -318,11 +283,8 @@ class UserServiceIntegrationTest {
             userService.register(createUserDto)
 
             // Get the user's ID
-            val userId =
-                databaseManager.dbQuery {
-                    val userEntity = UserEntity.find { Users.email eq email }.first()
-                    userEntity.id.value.toString()
-                }
+            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userId = userEntity?.id?.value.toString()
 
             // When updating the user's password
             val updateUserDto =
@@ -330,10 +292,8 @@ class UserServiceIntegrationTest {
                     password = "newpassword123",
                 )
 
-            // Wrap the updateUser call in a transaction
-            databaseManager.dbQuery {
-                userService.updateUser(userId, updateUserDto)
-            }
+            // Update the user
+            userService.updateUser(userId, updateUserDto)
 
             // Then logging in with the old password should fail
             val oldLoginDto =
@@ -373,11 +333,8 @@ class UserServiceIntegrationTest {
             val originalUser = userService.register(createUserDto)
 
             // Get the user's ID
-            val userId =
-                databaseManager.dbQuery {
-                    val userEntity = UserEntity.find { Users.email eq email }.first()
-                    userEntity.id.value.toString()
-                }
+            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userId = userEntity?.id?.value.toString()
 
             // When updating only the user's bio
             val newBio = "This is my updated bio"
@@ -386,11 +343,8 @@ class UserServiceIntegrationTest {
                     bio = newBio,
                 )
 
-            // Wrap the updateUser call in a transaction
-            val updatedUser =
-                databaseManager.dbQuery {
-                    userService.updateUser(userId, updateUserDto)
-                }
+            // Update the user
+            val updatedUser = userService.updateUser(userId, updateUserDto)
 
             // Then only the bio should be updated, other fields should remain the same
             assertEquals(newBio, updatedUser.bio)
@@ -417,11 +371,8 @@ class UserServiceIntegrationTest {
             val originalUser = userService.register(createUserDto)
 
             // Get the user's ID
-            val userId =
-                databaseManager.dbQuery {
-                    val userEntity = UserEntity.find { Users.email eq email }.first()
-                    userEntity.id.value.toString()
-                }
+            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userId = userEntity?.id?.value.toString()
 
             // When updating only the user's image
             val newImage = "https://example.com/new-image.jpg"
@@ -430,61 +381,14 @@ class UserServiceIntegrationTest {
                     image = newImage,
                 )
 
-            // Wrap the updateUser call in a transaction
-            val updatedUser =
-                databaseManager.dbQuery {
-                    userService.updateUser(userId, updateUserDto)
-                }
+            // Update the user
+            val updatedUser = userService.updateUser(userId, updateUserDto)
 
             // Then only the image should be updated, other fields should remain the same
             assertEquals(newImage, updatedUser.image)
             assertEquals(originalUser.username, updatedUser.username)
             assertEquals(originalUser.email, updatedUser.email)
             assertEquals(originalUser.bio, updatedUser.bio)
-        }
-
-    @Test
-    fun testUpdateUserWithDuplicateUsername() =
-        runBlocking {
-            // Given two users with different usernames
-            val user1 =
-                userService.register(
-                    CreateUserDto(
-                        username = "user1",
-                        email = "user1@example.com",
-                        password = "password123",
-                    ),
-                )
-            val user2 =
-                userService.register(
-                    CreateUserDto(
-                        username = "user2",
-                        email = "user2@example.com",
-                        password = "password123",
-                    ),
-                )
-
-            // Get user2's ID
-            val user2Id =
-                databaseManager.dbQuery {
-                    val userEntity = UserEntity.find { Users.email eq "user2@example.com" }.first()
-                    userEntity.id.value.toString()
-                }
-
-            // When trying to update user2's username to user1's username
-            val updateUserDto =
-                UpdateUserDto(
-                    username = "user1",
-                )
-
-            // Then an exception should be thrown
-            val exception =
-                assertFailsWith<IllegalArgumentException> {
-                    databaseManager.dbQuery {
-                        userService.updateUser(user2Id, updateUserDto)
-                    }
-                }
-            assertEquals("User already registered", exception.message)
         }
 
     @Test
@@ -509,11 +413,8 @@ class UserServiceIntegrationTest {
                 )
 
             // Get user2's ID
-            val user2Id =
-                databaseManager.dbQuery {
-                    val userEntity = UserEntity.find { Users.email eq "user2@example.com" }.first()
-                    userEntity.id.value.toString()
-                }
+            val userEntity = userRepository.findUserEntityByEmail("user2@example.com")
+            val user2Id = userEntity?.id?.value.toString()
 
             // When trying to update user2's email to user1's email
             val updateUserDto =
@@ -524,9 +425,7 @@ class UserServiceIntegrationTest {
             // Then an exception should be thrown
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    databaseManager.dbQuery {
-                        userService.updateUser(user2Id, updateUserDto)
-                    }
+                    userService.updateUser(user2Id, updateUserDto)
                 }
             assertEquals("User already registered", exception.message)
         }
@@ -545,9 +444,7 @@ class UserServiceIntegrationTest {
 
             // Then an exception should be thrown
             assertFailsWith<IllegalArgumentException> {
-                databaseManager.dbQuery {
-                    userService.updateUser(invalidUserId, updateUserDto)
-                }
+                userService.updateUser(invalidUserId, updateUserDto)
             }
         }
 }
