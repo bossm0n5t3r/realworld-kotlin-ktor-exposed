@@ -78,10 +78,11 @@ class UserRepositoryTest {
 
             // Get the user's ID
             val userId =
-                databaseManager.dbQuery {
-                    val userEntity = UserEntity.find { Users.email eq email }.first()
-                    userEntity.id.value.toString()
-                }
+                userRepository
+                    .findUserEntityByEmail(email)
+                    ?.id
+                    ?.value
+                    ?.toString() ?: error("User not found")
 
             // When
             val userEntity = userRepository.getUserEntityById(userId)
@@ -128,21 +129,22 @@ class UserRepositoryTest {
             userRepository.createUser(username, email, hashedPassword, salt)
 
             // Get the user entity
-            val userEntity =
-                databaseManager.dbQuery {
-                    UserEntity.find { Users.email eq email }.first()
-                }
+            val userEntity = userRepository.findUserEntityByEmail(email) ?: error("User not found")
 
             // When - update the user's bio and image
             val newBio = "This is my updated bio"
             val newImage = "https://example.com/image.jpg"
 
-            databaseManager.dbQuery {
-                userEntity.bio = newBio
-                userEntity.image = newImage
-            }
-
-            val updatedUserDto = userRepository.updateUser(userEntity)
+            val updatedUserDto =
+                userRepository.updateUser(
+                    userEntity,
+                    userEntity.username,
+                    userEntity.email,
+                    userEntity.hashedPassword,
+                    userEntity.salt,
+                    newBio,
+                    newImage,
+                )
 
             // Then
             assertEquals(username, updatedUserDto.username)
