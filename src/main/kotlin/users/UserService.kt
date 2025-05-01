@@ -50,32 +50,31 @@ class UserService(
     ): UserDto {
         val userEntity = getUserEntityById(id)
 
-        if (updateUserDto.username != null) {
-            userEntity.username = updateUserDto.username
-        }
-
         if (updateUserDto.email != null) {
             val existingUser = userRepository.findUserEntityByEmail(updateUserDto.email)
             require(existingUser == null || existingUser.id.value.toString() == id) {
                 "User already registered"
             }
-            userEntity.email = updateUserDto.email
         }
 
-        if (updateUserDto.password != null) {
-            val updatedHashedPassword = passwordEncoder.hashPassword(updateUserDto.password, userEntity.salt)
+        val updatedUserName = updateUserDto.username ?: userEntity.username
+        val updatedEmail = updateUserDto.email ?: userEntity.email
+        val updatedHashedPassword =
+            updateUserDto.password
+                ?.let { passwordEncoder.hashPassword(it, userEntity.salt) }
+                ?: userEntity.hashedPassword
+        val updatedSalt = userEntity.salt
+        val updatedBio = updateUserDto.bio ?: userEntity.bio
+        val updatedImage = updateUserDto.image ?: userEntity.image
 
-            userEntity.hashedPassword = updatedHashedPassword
-        }
-
-        if (updateUserDto.bio != null) {
-            userEntity.bio = updateUserDto.bio
-        }
-
-        if (updateUserDto.image != null) {
-            userEntity.image = updateUserDto.image
-        }
-
-        return userRepository.updateUser(userEntity)
+        return userRepository.updateUser(
+            userEntity,
+            updatedUserName,
+            updatedEmail,
+            updatedHashedPassword,
+            updatedSalt,
+            updatedBio,
+            updatedImage,
+        )
     }
 }
