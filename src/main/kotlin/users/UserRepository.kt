@@ -33,8 +33,24 @@ class UserRepository(
 
     suspend fun getAllUsers() = databaseManager.dbQuery { UserEntity.all().map { UserDto(it) } }
 
-    suspend fun updateUser(userEntity: UserEntity): UserDto {
-        databaseManager.dbQuery { userEntity.flush() }
+    suspend fun updateUser(
+        userEntity: UserEntity,
+        updatedUserNames: String,
+        updatedEmails: String,
+        updatedHashedPasswords: String,
+        updatedSalts: String,
+        updatedBio: String,
+        updatedImages: String? = null,
+    ): UserDto {
+        databaseManager.dbQuery {
+            userEntity.username = updatedUserNames
+            userEntity.email = updatedEmails
+            userEntity.hashedPassword = updatedHashedPasswords
+            userEntity.salt = updatedSalts
+            userEntity.bio = updatedBio
+            updatedImages?.let { userEntity.image = it }
+            userEntity.flush()
+        }
         return UserDto(userEntity)
     }
 }
