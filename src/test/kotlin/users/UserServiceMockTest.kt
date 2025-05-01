@@ -246,7 +246,17 @@ class UserServiceMockTest {
             // Mock the UserRepository methods
             coEvery { userRepository.getUserEntityById(userId) } returns userEntity
             coEvery { userRepository.findUserEntityByEmail(updateUserDto.email!!) } returns null
-            coEvery { userRepository.updateUser(userEntity) } returns updatedUserDto
+            coEvery {
+                userRepository.updateUser(
+                    userEntity,
+                    updateUserDto.username!!,
+                    updateUserDto.email!!,
+                    any(),
+                    any(),
+                    updateUserDto.bio!!,
+                    updateUserDto.image,
+                )
+            } returns updatedUserDto
 
             // When
             val result = userService.updateUser(userId, updateUserDto)
@@ -260,6 +270,16 @@ class UserServiceMockTest {
             // Verify that the repository methods were called
             coVerify { userRepository.getUserEntityById(userId) }
             coVerify { userRepository.findUserEntityByEmail(updateUserDto.email!!) }
-            coVerify { userRepository.updateUser(userEntity) }
+            coVerify {
+                userRepository.updateUser(
+                    userEntity,
+                    updateUserDto.username!!,
+                    updateUserDto.email!!,
+                    any(),
+                    any(),
+                    updateUserDto.bio!!,
+                    updateUserDto.image,
+                )
+            }
         }
 }
