@@ -248,4 +248,25 @@ class JwtProviderTest {
         assertEquals(ISSUER, decodedJWT.issuer)
         assertEquals(subject, decodedJWT.subject)
     }
+
+    @Test
+    fun testCreateJWTWithSubjectOnly() {
+        // Given a subject
+        val subject = "test-subject-only"
+
+        // When creating a JWT with only the subject
+        val jwt = JwtProvider.createJWT(subject)
+
+        // Then the JWT should not be empty
+        assertTrue(jwt.isNotEmpty())
+
+        // And when verifying the JWT with the default public key
+        val publicKey = JwtProvider.hexEncodedPublicKey.toPublicKey()
+        val decodedJWT = JwtProvider.verifyJWT(jwt, publicKey)
+
+        // Then the decoded JWT should be valid
+        assertNotNull(decodedJWT)
+        assertEquals(ISSUER, decodedJWT.issuer)
+        assertEquals(subject, decodedJWT.subject)
+    }
 }
