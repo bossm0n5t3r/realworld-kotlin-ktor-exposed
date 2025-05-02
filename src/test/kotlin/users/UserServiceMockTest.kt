@@ -98,6 +98,7 @@ class UserServiceMockTest {
             val userEntity = mockk<UserEntity>()
 
             // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.randomUUID(), Users)
             every { userEntity.username } returns "testuser"
             every { userEntity.email } returns loginUserDto.email
             every { userEntity.hashedPassword } returns hashedPassword
@@ -173,20 +174,21 @@ class UserServiceMockTest {
     fun testGetUserById() =
         runBlocking {
             // Given
-            val userId = UUID.randomUUID().toString()
+            val userId = UUID.randomUUID()
             val userEntity = mockk<UserEntity>()
 
             // Set up the user entity properties
+            every { userEntity.id } returns EntityID(userId, Users)
             every { userEntity.username } returns "testuser"
             every { userEntity.email } returns "test@example.com"
             every { userEntity.bio } returns ""
             every { userEntity.image } returns null
 
             // Mock the UserRepository methods
-            coEvery { userRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { userRepository.getUserEntityById(userId.toString()) } returns userEntity
 
             // When
-            val result = userService.getUserById(userId)
+            val result = userService.getUserById(userId.toString())
 
             // Then
             assertEquals("testuser", result.username)
@@ -195,7 +197,7 @@ class UserServiceMockTest {
             assertEquals(null, result.image)
 
             // Verify that the repository methods were called
-            coVerify { userRepository.getUserEntityById(userId) }
+            coVerify { userRepository.getUserEntityById(userId.toString()) }
         }
 
     @Test
