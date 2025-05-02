@@ -23,6 +23,21 @@ object JwtProvider {
     const val ISSUER = "realworld-kotlin-ktor-exposed-app"
     private const val EXPIRATION_TIME_IN_SECONDS = 3600L // 1 hour default
 
+    var hexEncodedPublicKey: String
+    var hexEncodedPrivateKey: String
+
+    init {
+        val (publicKey, privateKey) = generateECKeyPair()
+        hexEncodedPublicKey = publicKey
+        hexEncodedPrivateKey = privateKey
+        println("Public key: $hexEncodedPublicKey")
+        println("Private key: $hexEncodedPrivateKey")
+        println("Public key (bytes): ${publicKey.hexToByteArray().contentToString()}")
+        println("Private key (bytes): ${privateKey.hexToByteArray().contentToString()}")
+        println("Public key (bytes length): ${publicKey.hexToByteArray().size}")
+        println("Private key (bytes length): ${privateKey.hexToByteArray().size}")
+    }
+
     fun generateECKeyPair(): Pair<String, String> {
         val keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM)
         val ecSpec = ECGenParameterSpec(CURVE)
