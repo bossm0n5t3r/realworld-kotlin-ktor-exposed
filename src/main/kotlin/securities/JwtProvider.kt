@@ -81,6 +81,8 @@ object JwtProvider {
             throw RuntimeException("Invalid key type. Expected EC keys.", e)
         }
 
+    fun createJWT(subject: String) = createJWT(hexEncodedPublicKey.toPublicKey(), hexEncodedPrivateKey.toPrivateKey(), subject = subject)
+
     fun verifyJWT(
         token: String,
         publicKey: PublicKey,
