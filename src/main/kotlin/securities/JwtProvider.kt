@@ -15,6 +15,7 @@ import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import java.util.Date
 
 @OptIn(ExperimentalStdlibApi::class)
 object JwtProvider {
@@ -72,8 +73,8 @@ object JwtProvider {
                 .create()
                 .withIssuer(issuer)
                 .withSubject(subject)
-                .withIssuedAt(java.util.Date(currentTimeMillis))
-                .withExpiresAt(java.util.Date(currentTimeMillis + expirationTimeInSeconds * 1000))
+                .withIssuedAt(Date(currentTimeMillis))
+                .withExpiresAt(Date(currentTimeMillis + expirationTimeInSeconds * 1000))
                 .sign(algorithm)
         } catch (e: JWTCreationException) {
             throw RuntimeException("Token creation failed: ${e.message}", e)
