@@ -1,5 +1,7 @@
 package me.bossm0n5t3r.users
 
+import me.bossm0n5t3r.securities.JwtProvider
+
 data class UserDto(
     val email: String,
     val token: String,
@@ -9,7 +11,7 @@ data class UserDto(
 ) {
     constructor(userEntity: UserEntity) : this(
         email = userEntity.email,
-        token = "",
+        token = JwtProvider.createJWT(userEntity.id.value.toString()),
         username = userEntity.username,
         bio = userEntity.bio,
         image = userEntity.image,
