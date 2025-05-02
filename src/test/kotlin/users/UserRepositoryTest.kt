@@ -15,18 +15,10 @@ class UserRepositoryTest {
     private val userRepository: UserRepository = UserRepository(databaseManager)
 
     @BeforeTest
-    fun setup() =
-        runBlocking {
-            // Create tables before each test
-            databaseManager.createTables()
-        }
+    fun setup() = databaseManager.createTables() // Create tables before each test
 
     @AfterTest
-    fun tearDown() =
-        runBlocking {
-            // Drop tables after each test
-            databaseManager.dropTables()
-        }
+    fun tearDown() = databaseManager.dropTables() // Drop tables after each test
 
     @Test
     fun testCreateUser() =

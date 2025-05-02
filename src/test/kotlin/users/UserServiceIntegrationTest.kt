@@ -20,18 +20,10 @@ class UserServiceIntegrationTest {
     private val userService: UserService = UserService(userRepository, passwordEncoder)
 
     @BeforeTest
-    fun setup() =
-        runBlocking {
-            // Create tables before each test
-            databaseManager.createTables()
-        }
+    fun setup() = databaseManager.createTables() // Create tables before each test
 
     @AfterTest
-    fun tearDown() =
-        runBlocking {
-            // Drop tables after each test
-            databaseManager.dropTables()
-        }
+    fun tearDown() = databaseManager.dropTables() // Drop tables after each test
 
     /**
      * Helper method to register a user and return their ID

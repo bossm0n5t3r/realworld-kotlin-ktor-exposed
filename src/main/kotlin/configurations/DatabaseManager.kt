@@ -7,15 +7,16 @@ import me.bossm0n5t3r.users.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 
 interface DatabaseManager {
     val database: Database
 
     suspend fun <T> dbQuery(block: suspend () -> T): T
 
-    suspend fun createTables()
+    fun createTables()
 
-    suspend fun dropTables()
+    fun dropTables()
 }
 
 class DatabaseManagerImpl : DatabaseManager {
@@ -36,15 +37,17 @@ class DatabaseManagerImpl : DatabaseManager {
 
     override suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO, db = database) { block() }
 
-    override suspend fun createTables() {
-        dbQuery {
+    override fun createTables() {
+        transaction(this.database) {
             SchemaUtils.create(Users)
         }
+        LOGGER.info("{} createTables", LogResult.SUCCEEDED)
     }
 
-    override suspend fun dropTables() {
-        dbQuery {
+    override fun dropTables() {
+        transaction(this.database) {
             SchemaUtils.drop(Users)
         }
+        LOGGER.info("{} dropTables", LogResult.SUCCEEDED)
     }
 }
