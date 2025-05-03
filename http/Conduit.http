@@ -127,7 +127,7 @@ Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
 
-{"user":{"email":"{{EMAIL}}"}}
+{"user":{"bio":"{{BIO}}"}}
 
 > {%
     // TODO: migrate to HTTP Client Response handler API
