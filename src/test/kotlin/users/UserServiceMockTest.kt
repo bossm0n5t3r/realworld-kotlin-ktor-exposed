@@ -14,9 +14,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class UserServiceMockTest {
-    private val userRepository: UserRepository = mockk(relaxed = true)
+    private val usersRepository: UsersRepository = mockk(relaxed = true)
     private val passwordEncoder: PasswordEncoder = mockk(relaxed = true)
-    private val userService: UserService = UserService(userRepository, passwordEncoder)
+    private val userService: UserService = UserService(usersRepository, passwordEncoder)
 
     @Test
     fun testRegister() =
@@ -50,10 +50,10 @@ class UserServiceMockTest {
             every { passwordEncoder.encode(createUserDto.password) } returns Pair(hashedPassword, salt)
 
             // Mock the UserRepository methods
-            coEvery { userRepository.findUserEntityByEmail(createUserDto.email) } returns null
-            coEvery { userRepository.findUserEntityByUsername(createUserDto.username) } returns null
+            coEvery { usersRepository.findUserEntityByEmail(createUserDto.email) } returns null
+            coEvery { usersRepository.findUserEntityByUsername(createUserDto.username) } returns null
             coEvery {
-                userRepository.createUser(
+                usersRepository.createUser(
                     username = createUserDto.username,
                     email = createUserDto.email,
                     hashedPassword = hashedPassword,
@@ -71,9 +71,9 @@ class UserServiceMockTest {
             assertEquals(null, result.image)
 
             // Verify that the repository methods were called
-            coVerify { userRepository.findUserEntityByEmail(createUserDto.email) }
+            coVerify { usersRepository.findUserEntityByEmail(createUserDto.email) }
             coVerify {
-                userRepository.createUser(
+                usersRepository.createUser(
                     username = createUserDto.username,
                     email = createUserDto.email,
                     hashedPassword = hashedPassword,
@@ -107,7 +107,7 @@ class UserServiceMockTest {
             every { userEntity.image } returns null
 
             // Mock the UserRepository methods
-            coEvery { userRepository.findUserEntityByEmail(loginUserDto.email) } returns userEntity
+            coEvery { usersRepository.findUserEntityByEmail(loginUserDto.email) } returns userEntity
 
             // Mock the password encoder
             every { passwordEncoder.matches(loginUserDto.password, hashedPassword, salt) } returns true
@@ -123,7 +123,7 @@ class UserServiceMockTest {
             verify { passwordEncoder.matches(loginUserDto.password, hashedPassword, salt) }
 
             // Verify that the repository methods were called
-            coVerify { userRepository.findUserEntityByEmail(loginUserDto.email) }
+            coVerify { usersRepository.findUserEntityByEmail(loginUserDto.email) }
         }
 
     @Test
@@ -147,7 +147,7 @@ class UserServiceMockTest {
             every { userEntity.salt } returns salt
 
             // Mock the UserRepository methods
-            coEvery { userRepository.findUserEntityByEmail(loginUserDto.email) } returns userEntity
+            coEvery { usersRepository.findUserEntityByEmail(loginUserDto.email) } returns userEntity
 
             // Mock the password encoder to return false for invalid password
             every { passwordEncoder.matches(loginUserDto.password, hashedPassword, salt) } returns false
@@ -164,7 +164,7 @@ class UserServiceMockTest {
             verify { passwordEncoder.matches(loginUserDto.password, hashedPassword, salt) }
 
             // Verify that the repository methods were called
-            coVerify { userRepository.findUserEntityByEmail(loginUserDto.email) }
+            coVerify { usersRepository.findUserEntityByEmail(loginUserDto.email) }
         }
 
     @Test
@@ -182,7 +182,7 @@ class UserServiceMockTest {
             every { userEntity.image } returns null
 
             // Mock the UserRepository methods
-            coEvery { userRepository.getUserEntityById(userId.toString()) } returns userEntity
+            coEvery { usersRepository.getUserEntityById(userId.toString()) } returns userEntity
 
             // When
             val result = userService.getUserById(userId.toString())
@@ -194,7 +194,7 @@ class UserServiceMockTest {
             assertEquals(null, result.image)
 
             // Verify that the repository methods were called
-            coVerify { userRepository.getUserEntityById(userId.toString()) }
+            coVerify { usersRepository.getUserEntityById(userId.toString()) }
         }
 
     @Test
@@ -240,11 +240,11 @@ class UserServiceMockTest {
                 )
 
             // Mock the UserRepository methods
-            coEvery { userRepository.getUserEntityById(userId) } returns userEntity
-            coEvery { userRepository.findUserEntityByEmail(updateUserDto.email) } returns null
-            coEvery { userRepository.findUserEntityByUsername(updateUserDto.username) } returns null
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { usersRepository.findUserEntityByEmail(updateUserDto.email) } returns null
+            coEvery { usersRepository.findUserEntityByUsername(updateUserDto.username) } returns null
             coEvery {
-                userRepository.updateUser(
+                usersRepository.updateUser(
                     userEntity,
                     updateUserDto.username,
                     updateUserDto.email,
@@ -265,10 +265,10 @@ class UserServiceMockTest {
             assertEquals(updateUserDto.image, result.image)
 
             // Verify that the repository methods were called
-            coVerify { userRepository.getUserEntityById(userId) }
-            coVerify { userRepository.findUserEntityByEmail(updateUserDto.email) }
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { usersRepository.findUserEntityByEmail(updateUserDto.email) }
             coVerify {
-                userRepository.updateUser(
+                usersRepository.updateUser(
                     userEntity,
                     updateUserDto.username,
                     updateUserDto.email,

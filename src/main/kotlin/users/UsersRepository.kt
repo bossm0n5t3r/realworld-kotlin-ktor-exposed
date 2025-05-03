@@ -3,7 +3,7 @@ package me.bossm0n5t3r.users
 import me.bossm0n5t3r.configurations.DatabaseManager
 import java.util.UUID
 
-class UserRepository(
+class UsersRepository(
     private val databaseManager: DatabaseManager,
 ) {
     suspend fun createUser(

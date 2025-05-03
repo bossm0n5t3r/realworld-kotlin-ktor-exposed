@@ -6,7 +6,7 @@ import me.bossm0n5t3r.configurations.DatabaseManager
 import me.bossm0n5t3r.configurations.DatabaseManagerImpl
 import me.bossm0n5t3r.uitilities.PasswordEncoder
 import me.bossm0n5t3r.uitilities.PasswordEncoderImpl
-import me.bossm0n5t3r.users.UserRepository
+import me.bossm0n5t3r.users.UsersRepository
 import me.bossm0n5t3r.users.UserService
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
@@ -20,7 +20,7 @@ fun Application.configureKoin() {
                 single<DatabaseManager> { DatabaseManagerImpl() }
             },
             module {
-                single { UserRepository(get()) }
+                single { UsersRepository(get()) }
                 single<PasswordEncoder> { PasswordEncoderImpl() }
             },
             module {

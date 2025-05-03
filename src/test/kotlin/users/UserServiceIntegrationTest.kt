@@ -15,9 +15,9 @@ import kotlin.test.assertTrue
 
 class UserServiceIntegrationTest {
     private val databaseManager: DatabaseManager = DatabaseManagerImpl()
-    private val userRepository: UserRepository = UserRepository(databaseManager)
+    private val usersRepository: UsersRepository = UsersRepository(databaseManager)
     private val passwordEncoder: PasswordEncoder = PasswordEncoderImpl()
-    private val userService: UserService = UserService(userRepository, passwordEncoder)
+    private val userService: UserService = UserService(usersRepository, passwordEncoder)
 
     @BeforeTest
     fun setup() = databaseManager.createTables() // Create tables before each test
@@ -43,7 +43,7 @@ class UserServiceIntegrationTest {
         userService.register(createUserDto)
 
         // Get the user's ID by querying the database
-        val userEntity = userRepository.findUserEntityByEmail(email)
+        val userEntity = usersRepository.findUserEntityByEmail(email)
         return userEntity?.id?.value?.toString() ?: error("User not found")
     }
 
@@ -263,7 +263,7 @@ class UserServiceIntegrationTest {
             userService.register(createUserDto)
 
             // Get the user's ID
-            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userEntity = usersRepository.findUserEntityByEmail(email)
             val userId = userEntity?.id?.value?.toString() ?: error("User not found")
 
             // When updating the user
@@ -303,7 +303,7 @@ class UserServiceIntegrationTest {
             userService.register(createUserDto)
 
             // Get the user's ID
-            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userEntity = usersRepository.findUserEntityByEmail(email)
             val userId = userEntity?.id?.value.toString()
 
             // When updating the user's password
@@ -353,7 +353,7 @@ class UserServiceIntegrationTest {
             val originalUser = userService.register(createUserDto)
 
             // Get the user's ID
-            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userEntity = usersRepository.findUserEntityByEmail(email)
             val userId = userEntity?.id?.value.toString()
 
             // When updating only the user's bio
@@ -391,7 +391,7 @@ class UserServiceIntegrationTest {
             val originalUser = userService.register(createUserDto)
 
             // Get the user's ID
-            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userEntity = usersRepository.findUserEntityByEmail(email)
             val userId = userEntity?.id?.value.toString()
 
             // When updating only the user's image
@@ -431,7 +431,7 @@ class UserServiceIntegrationTest {
             )
 
             // Get user2's ID
-            val userEntity = userRepository.findUserEntityByEmail("user2@example.com")
+            val userEntity = usersRepository.findUserEntityByEmail("user2@example.com")
             val user2Id = userEntity?.id?.value.toString()
 
             // When trying to update user2's email to user1's email
@@ -468,7 +468,7 @@ class UserServiceIntegrationTest {
             )
 
             // Get user2's ID
-            val userEntity = userRepository.findUserEntityByEmail("user2@example.com")
+            val userEntity = usersRepository.findUserEntityByEmail("user2@example.com")
             val user2Id = userEntity?.id?.value.toString()
 
             // When trying to update user2's username to user1's username

@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 class UserRepositoryTest {
     private val databaseManager: DatabaseManager = DatabaseManagerImpl()
-    private val userRepository: UserRepository = UserRepository(databaseManager)
+    private val usersRepository: UsersRepository = UsersRepository(databaseManager)
 
     @BeforeTest
     fun setup() = databaseManager.createTables() // Create tables before each test
@@ -30,7 +30,7 @@ class UserRepositoryTest {
             val salt = "salt123"
 
             // When
-            val userDto = userRepository.createUser(username, email, hashedPassword, salt)
+            val userDto = usersRepository.createUser(username, email, hashedPassword, salt)
 
             // Then
             assertEquals(username, userDto.username)
@@ -47,10 +47,10 @@ class UserRepositoryTest {
             val email = "test@example.com"
             val hashedPassword = "hashedpassword123"
             val salt = "salt123"
-            userRepository.createUser(username, email, hashedPassword, salt)
+            usersRepository.createUser(username, email, hashedPassword, salt)
 
             // When
-            val userEntity = userRepository.findUserEntityByEmail(email)
+            val userEntity = usersRepository.findUserEntityByEmail(email)
 
             // Then
             assertNotNull(userEntity)
@@ -66,10 +66,10 @@ class UserRepositoryTest {
             val email = "test@example.com"
             val hashedPassword = "hashedpassword123"
             val salt = "salt123"
-            userRepository.createUser(username, email, hashedPassword, salt)
+            usersRepository.createUser(username, email, hashedPassword, salt)
 
             // When
-            val userEntity = userRepository.findUserEntityByUsername(username)
+            val userEntity = usersRepository.findUserEntityByUsername(username)
 
             // Then
             assertNotNull(userEntity)
@@ -85,18 +85,18 @@ class UserRepositoryTest {
             val email = "test@example.com"
             val hashedPassword = "hashedpassword123"
             val salt = "salt123"
-            userRepository.createUser(username, email, hashedPassword, salt)
+            usersRepository.createUser(username, email, hashedPassword, salt)
 
             // Get the user's ID
             val userId =
-                userRepository
+                usersRepository
                     .findUserEntityByEmail(email)
                     ?.id
                     ?.value
                     ?.toString() ?: error("User not found")
 
             // When
-            val userEntity = userRepository.getUserEntityById(userId)
+            val userEntity = usersRepository.getUserEntityById(userId)
 
             // Then
             assertNotNull(userEntity)
@@ -117,11 +117,11 @@ class UserRepositoryTest {
             val hashedPassword = "hashedpassword123"
             val salt = "salt123"
 
-            userRepository.createUser(user1Username, user1Email, hashedPassword, salt)
-            userRepository.createUser(user2Username, user2Email, hashedPassword, salt)
+            usersRepository.createUser(user1Username, user1Email, hashedPassword, salt)
+            usersRepository.createUser(user2Username, user2Email, hashedPassword, salt)
 
             // When
-            val users = userRepository.getAllUsers()
+            val users = usersRepository.getAllUsers()
 
             // Then
             assertEquals(2, users.size)
@@ -137,17 +137,17 @@ class UserRepositoryTest {
             val email = "test@example.com"
             val hashedPassword = "hashedpassword123"
             val salt = "salt123"
-            userRepository.createUser(username, email, hashedPassword, salt)
+            usersRepository.createUser(username, email, hashedPassword, salt)
 
             // Get the user entity
-            val userEntity = userRepository.findUserEntityByEmail(email) ?: error("User not found")
+            val userEntity = usersRepository.findUserEntityByEmail(email) ?: error("User not found")
 
             // When - update the user's bio and image
             val newBio = "This is my updated bio"
             val newImage = "https://example.com/image.jpg"
 
             val updatedUserDto =
-                userRepository.updateUser(
+                usersRepository.updateUser(
                     userEntity,
                     userEntity.username,
                     userEntity.email,
