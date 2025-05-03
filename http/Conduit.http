@@ -34,6 +34,7 @@ X-Requested-With: XMLHttpRequest
     // tests['User has "token" property'] = user.hasOwnProperty('token');
     // }
     //
+    client.global.set("token", response.body.user.token);
 %}
 
 ###
@@ -59,6 +60,7 @@ X-Requested-With: XMLHttpRequest
     // tests['User has "image" property'] = user.hasOwnProperty('image');
     // tests['User has "token" property'] = user.hasOwnProperty('token');
     //
+    client.global.set("token", response.body.user.token);
 %}
 
 ###
@@ -90,6 +92,7 @@ X-Requested-With: XMLHttpRequest
     //
     // tests['Global variable "token" has been set'] = pm.globals.get('token') === user.token;
     //
+    client.global.set("token", response.body.user.token);
 %}
 
 ###
