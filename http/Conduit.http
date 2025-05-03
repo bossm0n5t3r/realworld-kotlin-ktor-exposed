@@ -18,24 +18,7 @@ X-Requested-With: XMLHttpRequest
 
 {"user":{"email":"{{EMAIL}}", "password":"{{PASSWORD}}", "username":"{{USERNAME}}"}}
 
-> {%
-    // TODO: migrate to HTTP Client Response handler API
-    // if (!(environment.isIntegrationTest)) {
-    // var responseJSON = JSON.parse(responseBody);
-    //
-    // tests['Response contains "user" property'] = responseJSON.hasOwnProperty('user');
-    //
-    // var user = responseJSON.user || {};
-    //
-    // tests['User has "email" property'] = user.hasOwnProperty('email');
-    // tests['User has "username" property'] = user.hasOwnProperty('username');
-    // tests['User has "bio" property'] = user.hasOwnProperty('bio');
-    // tests['User has "image" property'] = user.hasOwnProperty('image');
-    // tests['User has "token" property'] = user.hasOwnProperty('token');
-    // }
-    //
-    client.global.set("token", response.body.user.token);
-%}
+> {% client.global.set("token", response.body.user.token); %}
 
 ###
 # group: Auth
@@ -46,22 +29,7 @@ X-Requested-With: XMLHttpRequest
 
 {"user":{"email":"{{EMAIL}}", "password":"{{PASSWORD}}"}}
 
-> {%
-    // TODO: migrate to HTTP Client Response handler API
-    // var responseJSON = JSON.parse(responseBody);
-    //
-    // tests['Response contains "user" property'] = responseJSON.hasOwnProperty('user');
-    //
-    // var user = responseJSON.user || {};
-    //
-    // tests['User has "email" property'] = user.hasOwnProperty('email');
-    // tests['User has "username" property'] = user.hasOwnProperty('username');
-    // tests['User has "bio" property'] = user.hasOwnProperty('bio');
-    // tests['User has "image" property'] = user.hasOwnProperty('image');
-    // tests['User has "token" property'] = user.hasOwnProperty('token');
-    //
-    client.global.set("token", response.body.user.token);
-%}
+> {% client.global.set("token", response.body.user.token); %}
 
 ###
 # group: Auth
@@ -72,28 +40,7 @@ X-Requested-With: XMLHttpRequest
 
 {"user":{"email":"{{EMAIL}}", "password":"{{PASSWORD}}"}}
 
-> {%
-    // TODO: migrate to HTTP Client Response handler API
-    // var responseJSON = JSON.parse(responseBody);
-    //
-    // tests['Response contains "user" property'] = responseJSON.hasOwnProperty('user');
-    //
-    // var user = responseJSON.user || {};
-    //
-    // tests['User has "email" property'] = user.hasOwnProperty('email');
-    // tests['User has "username" property'] = user.hasOwnProperty('username');
-    // tests['User has "bio" property'] = user.hasOwnProperty('bio');
-    // tests['User has "image" property'] = user.hasOwnProperty('image');
-    // tests['User has "token" property'] = user.hasOwnProperty('token');
-    //
-    // if(tests['User has "token" property']){
-    //     pm.globals.set('token', user.token);
-    // }
-    //
-    // tests['Global variable "token" has been set'] = pm.globals.get('token') === user.token;
-    //
-    client.global.set("token", response.body.user.token);
-%}
+> {% client.global.set("token", response.body.user.token); %}
 
 ###
 # group: Auth
@@ -103,21 +50,7 @@ Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
 
-> {%
-    // TODO: migrate to HTTP Client Response handler API
-    // var responseJSON = JSON.parse(responseBody);
-    //
-    // tests['Response contains "user" property'] = responseJSON.hasOwnProperty('user');
-    //
-    // var user = responseJSON.user || {};
-    //
-    // tests['User has "email" property'] = user.hasOwnProperty('email');
-    // tests['User has "username" property'] = user.hasOwnProperty('username');
-    // tests['User has "bio" property'] = user.hasOwnProperty('bio');
-    // tests['User has "image" property'] = user.hasOwnProperty('image');
-    // tests['User has "token" property'] = user.hasOwnProperty('token');
-    //
-%}
+> {% client.global.set("token", response.body.user.token); %}
 
 ###
 # group: Auth
@@ -129,21 +62,7 @@ Authorization: Token {{token}}
 
 {"user":{"bio":"{{BIO}}"}}
 
-> {%
-    // TODO: migrate to HTTP Client Response handler API
-    // var responseJSON = JSON.parse(responseBody);
-    //
-    // tests['Response contains "user" property'] = responseJSON.hasOwnProperty('user');
-    //
-    // var user = responseJSON.user || {};
-    //
-    // tests['User has "email" property'] = user.hasOwnProperty('email');
-    // tests['User has "username" property'] = user.hasOwnProperty('username');
-    // tests['User has "bio" property'] = user.hasOwnProperty('bio');
-    // tests['User has "image" property'] = user.hasOwnProperty('image');
-    // tests['User has "token" property'] = user.hasOwnProperty('token');
-    //
-%}
+> {% client.global.set("token", response.body.user.token); %}
 
 ###
 # group: Articles
