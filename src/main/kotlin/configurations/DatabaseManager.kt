@@ -3,6 +3,7 @@ package me.bossm0n5t3r.configurations
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
+import me.bossm0n5t3r.profiles.Followings
 import me.bossm0n5t3r.users.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -37,16 +38,18 @@ class DatabaseManagerImpl : DatabaseManager {
 
     override suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO, db = database) { block() }
 
+    private val tables = arrayOf(Users, Followings)
+
     override fun createTables() {
         transaction(this.database) {
-            SchemaUtils.create(Users)
+            SchemaUtils.create(*tables)
         }
         LOGGER.info("{} createTables", LogResult.SUCCEEDED)
     }
 
     override fun dropTables() {
         transaction(this.database) {
-            SchemaUtils.drop(Users)
+            SchemaUtils.drop(*tables)
         }
         LOGGER.info("{} dropTables", LogResult.SUCCEEDED)
     }
