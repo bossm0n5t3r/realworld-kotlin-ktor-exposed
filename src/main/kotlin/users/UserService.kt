@@ -26,7 +26,10 @@ class UserService(
 
     suspend fun register(createUserDto: CreateUserDto): UserDto {
         val userWithEmail = userRepository.findUserEntityByEmail(createUserDto.email)
-        require(userWithEmail == null) { "User already registered" }
+        require(userWithEmail == null) { "User with this email already registered" }
+
+        val userWithUsername = userRepository.findUserEntityByUsername(createUserDto.username)
+        require(userWithUsername == null) { "User with this username already registered" }
 
         val (hashedPassword, hexEncodedSalt) = passwordEncoder.encode(createUserDto.password)
 
@@ -51,9 +54,16 @@ class UserService(
         val userEntity = getUserEntityById(id)
 
         if (updateUserDto.email != null) {
-            val existingUser = userRepository.findUserEntityByEmail(updateUserDto.email)
-            require(existingUser == null || existingUser.id.value.toString() == id) {
-                "User already registered"
+            val existingUserWithEmail = userRepository.findUserEntityByEmail(updateUserDto.email)
+            require(existingUserWithEmail == null || existingUserWithEmail.id.value.toString() == id) {
+                "User with this email already registered"
+            }
+        }
+
+        if (updateUserDto.username != null) {
+            val existingUserWithUsername = userRepository.findUserEntityByUsername(updateUserDto.username)
+            require(existingUserWithUsername == null || existingUserWithUsername.id.value.toString() == id) {
+                "User with this username already registered"
             }
         }
 

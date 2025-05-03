@@ -26,6 +26,11 @@ class UserRepository(
             UserEntity.find { Users.email eq email }.firstOrNull()
         }
 
+    suspend fun findUserEntityByUsername(username: String) =
+        databaseManager.dbQuery {
+            UserEntity.find { Users.username eq username }.firstOrNull()
+        }
+
     suspend fun getUserEntityById(id: String): UserEntity {
         val uuid = UUID.fromString(id)
         return databaseManager.dbQuery { requireNotNull(UserEntity.findById(uuid)) { "Not found user by id $id" } }

@@ -93,7 +93,35 @@ class UserServiceIntegrationTest {
                 assertFailsWith<IllegalArgumentException> {
                     userService.register(duplicateEmailDto)
                 }
-            assertEquals("User already registered", exception.message)
+            assertEquals("User with this email already registered", exception.message)
+        }
+
+    @Test
+    fun testRegisterWithDuplicateUsername() =
+        runBlocking {
+            // Given a user already registered
+            val createUserDto =
+                CreateUserDto(
+                    username = "testuser",
+                    email = "test@example.com",
+                    password = "password123",
+                )
+            userService.register(createUserDto)
+
+            // When trying to register another user with the same username but different email
+            val duplicateUsernameDto =
+                CreateUserDto(
+                    username = "testuser",
+                    email = "different@example.com",
+                    password = "password123",
+                )
+
+            // Then an exception should be thrown
+            val exception =
+                assertFailsWith<IllegalArgumentException> {
+                    userService.register(duplicateUsernameDto)
+                }
+            assertEquals("User with this username already registered", exception.message)
         }
 
     @Test
@@ -387,22 +415,20 @@ class UserServiceIntegrationTest {
     fun testUpdateUserWithDuplicateEmail() =
         runBlocking {
             // Given two users with different emails
-            val user1 =
-                userService.register(
-                    CreateUserDto(
-                        username = "user1",
-                        email = "user1@example.com",
-                        password = "password123",
-                    ),
-                )
-            val user2 =
-                userService.register(
-                    CreateUserDto(
-                        username = "user2",
-                        email = "user2@example.com",
-                        password = "password123",
-                    ),
-                )
+            userService.register(
+                CreateUserDto(
+                    username = "user1",
+                    email = "user1@example.com",
+                    password = "password123",
+                ),
+            )
+            userService.register(
+                CreateUserDto(
+                    username = "user2",
+                    email = "user2@example.com",
+                    password = "password123",
+                ),
+            )
 
             // Get user2's ID
             val userEntity = userRepository.findUserEntityByEmail("user2@example.com")
@@ -419,7 +445,44 @@ class UserServiceIntegrationTest {
                 assertFailsWith<IllegalArgumentException> {
                     userService.updateUser(user2Id, updateUserDto)
                 }
-            assertEquals("User already registered", exception.message)
+            assertEquals("User with this email already registered", exception.message)
+        }
+
+    @Test
+    fun testUpdateUserWithDuplicateUsername() =
+        runBlocking {
+            // Given two users with different usernames
+            userService.register(
+                CreateUserDto(
+                    username = "user1",
+                    email = "user1@example.com",
+                    password = "password123",
+                ),
+            )
+            userService.register(
+                CreateUserDto(
+                    username = "user2",
+                    email = "user2@example.com",
+                    password = "password123",
+                ),
+            )
+
+            // Get user2's ID
+            val userEntity = userRepository.findUserEntityByEmail("user2@example.com")
+            val user2Id = userEntity?.id?.value.toString()
+
+            // When trying to update user2's username to user1's username
+            val updateUserDto =
+                UpdateUserDto(
+                    username = "user1",
+                )
+
+            // Then an exception should be thrown
+            val exception =
+                assertFailsWith<IllegalArgumentException> {
+                    userService.updateUser(user2Id, updateUserDto)
+                }
+            assertEquals("User with this username already registered", exception.message)
         }
 
     @Test

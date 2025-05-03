@@ -4,7 +4,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import me.bossm0n5t3r.uitilities.PasswordEncoder
@@ -52,6 +51,7 @@ class UserServiceMockTest {
 
             // Mock the UserRepository methods
             coEvery { userRepository.findUserEntityByEmail(createUserDto.email) } returns null
+            coEvery { userRepository.findUserEntityByUsername(createUserDto.username) } returns null
             coEvery {
                 userRepository.createUser(
                     username = createUserDto.username,
@@ -105,9 +105,6 @@ class UserServiceMockTest {
             every { userEntity.salt } returns salt
             every { userEntity.bio } returns ""
             every { userEntity.image } returns null
-
-            // Create a UserDto from the entity
-            val userDto = UserDto(userEntity)
 
             // Mock the UserRepository methods
             coEvery { userRepository.findUserEntityByEmail(loginUserDto.email) } returns userEntity
@@ -213,9 +210,6 @@ class UserServiceMockTest {
                     image = "https://example.com/image.jpg",
                 )
 
-            // Create a spy of UserService
-            val spyUserService = spyk(userService)
-
             // Create a mock UserEntity
             val userEntity = mockk<UserEntity>()
 
@@ -247,15 +241,16 @@ class UserServiceMockTest {
 
             // Mock the UserRepository methods
             coEvery { userRepository.getUserEntityById(userId) } returns userEntity
-            coEvery { userRepository.findUserEntityByEmail(updateUserDto.email!!) } returns null
+            coEvery { userRepository.findUserEntityByEmail(updateUserDto.email) } returns null
+            coEvery { userRepository.findUserEntityByUsername(updateUserDto.username) } returns null
             coEvery {
                 userRepository.updateUser(
                     userEntity,
-                    updateUserDto.username!!,
-                    updateUserDto.email!!,
+                    updateUserDto.username,
+                    updateUserDto.email,
                     any(),
                     any(),
-                    updateUserDto.bio!!,
+                    updateUserDto.bio,
                     updateUserDto.image,
                 )
             } returns updatedUserDto
@@ -271,15 +266,15 @@ class UserServiceMockTest {
 
             // Verify that the repository methods were called
             coVerify { userRepository.getUserEntityById(userId) }
-            coVerify { userRepository.findUserEntityByEmail(updateUserDto.email!!) }
+            coVerify { userRepository.findUserEntityByEmail(updateUserDto.email) }
             coVerify {
                 userRepository.updateUser(
                     userEntity,
-                    updateUserDto.username!!,
-                    updateUserDto.email!!,
+                    updateUserDto.username,
+                    updateUserDto.email,
                     any(),
                     any(),
-                    updateUserDto.bio!!,
+                    updateUserDto.bio,
                     updateUserDto.image,
                 )
             }

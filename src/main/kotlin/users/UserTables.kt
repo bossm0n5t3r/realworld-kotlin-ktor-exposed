@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.UUID
 
 object Users : UUIDTable() {
-    val username = varchar("username", 255)
+    val username = varchar("username", 255).uniqueIndex()
     val email = varchar("email", 255).uniqueIndex()
     val hashedPassword = varchar("hashed_password", 255)
     val salt = varchar("salt", 32)

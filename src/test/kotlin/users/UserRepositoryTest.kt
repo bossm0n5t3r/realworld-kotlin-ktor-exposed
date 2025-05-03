@@ -59,6 +59,25 @@ class UserRepositoryTest {
         }
 
     @Test
+    fun testFindUserEntityByUsername() =
+        runBlocking {
+            // Given
+            val username = "testuser"
+            val email = "test@example.com"
+            val hashedPassword = "hashedpassword123"
+            val salt = "salt123"
+            userRepository.createUser(username, email, hashedPassword, salt)
+
+            // When
+            val userEntity = userRepository.findUserEntityByUsername(username)
+
+            // Then
+            assertNotNull(userEntity)
+            assertEquals(username, userEntity.username)
+            assertEquals(email, userEntity.email)
+        }
+
+    @Test
     fun testGetUserEntityById() =
         runBlocking {
             // Given
