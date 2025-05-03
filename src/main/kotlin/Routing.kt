@@ -8,7 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import me.bossm0n5t3r.users.UserService
+import me.bossm0n5t3r.users.UsersService
 import me.bossm0n5t3r.users.usersApi
 import org.koin.ktor.ext.inject
 
@@ -19,7 +19,7 @@ fun Application.configureRouting() {
         }
     }
 
-    val userService: UserService by inject()
+    val usersService: UsersService by inject()
 
     routing {
         get("/") {
@@ -31,7 +31,7 @@ fun Application.configureRouting() {
                 call.respondText("Hello World from API!")
             }
 
-            usersApi(userService)
+            usersApi(usersService)
         }
     }
 }

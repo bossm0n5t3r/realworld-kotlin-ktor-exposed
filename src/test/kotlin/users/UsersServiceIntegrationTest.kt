@@ -13,11 +13,11 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class UserServiceIntegrationTest {
+class UsersServiceIntegrationTest {
     private val databaseManager: DatabaseManager = DatabaseManagerImpl()
     private val usersRepository: UsersRepository = UsersRepository(databaseManager)
     private val passwordEncoder: PasswordEncoder = PasswordEncoderImpl()
-    private val userService: UserService = UserService(usersRepository, passwordEncoder)
+    private val usersService: UsersService = UsersService(usersRepository, passwordEncoder)
 
     @BeforeTest
     fun setup() = databaseManager.createTables() // Create tables before each test
@@ -40,7 +40,7 @@ class UserServiceIntegrationTest {
                 email = email,
                 password = password,
             )
-        userService.register(createUserDto)
+        usersService.register(createUserDto)
 
         // Get the user's ID by querying the database
         val userEntity = usersRepository.findUserEntityByEmail(email)
@@ -59,7 +59,7 @@ class UserServiceIntegrationTest {
                 )
 
             // When registering a new user
-            val userDto = userService.register(createUserDto)
+            val userDto = usersService.register(createUserDto)
 
             // Then the returned UserDto should have the correct values
             assertEquals(createUserDto.username, userDto.username)
@@ -78,7 +78,7 @@ class UserServiceIntegrationTest {
                     email = "test@example.com",
                     password = "password123",
                 )
-            userService.register(createUserDto)
+            usersService.register(createUserDto)
 
             // When trying to register another user with the same email but different username
             val duplicateEmailDto =
@@ -91,7 +91,7 @@ class UserServiceIntegrationTest {
             // Then an exception should be thrown
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    userService.register(duplicateEmailDto)
+                    usersService.register(duplicateEmailDto)
                 }
             assertEquals("User with this email already registered", exception.message)
         }
@@ -106,7 +106,7 @@ class UserServiceIntegrationTest {
                     email = "test@example.com",
                     password = "password123",
                 )
-            userService.register(createUserDto)
+            usersService.register(createUserDto)
 
             // When trying to register another user with the same username but different email
             val duplicateUsernameDto =
@@ -119,7 +119,7 @@ class UserServiceIntegrationTest {
             // Then an exception should be thrown
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    userService.register(duplicateUsernameDto)
+                    usersService.register(duplicateUsernameDto)
                 }
             assertEquals("User with this username already registered", exception.message)
         }
@@ -134,7 +134,7 @@ class UserServiceIntegrationTest {
                     email = "test@example.com",
                     password = "password123",
                 )
-            userService.register(createUserDto)
+            usersService.register(createUserDto)
 
             // When logging in with correct credentials
             val loginUserDto =
@@ -142,7 +142,7 @@ class UserServiceIntegrationTest {
                     email = "test@example.com",
                     password = "password123",
                 )
-            val userDto = userService.login(loginUserDto)
+            val userDto = usersService.login(loginUserDto)
 
             // Then the returned UserDto should have the correct values
             assertEquals(createUserDto.username, userDto.username)
@@ -159,7 +159,7 @@ class UserServiceIntegrationTest {
                     email = "test@example.com",
                     password = "password123",
                 )
-            userService.register(createUserDto)
+            usersService.register(createUserDto)
 
             // When logging in with an invalid email
             val loginUserDto =
@@ -171,7 +171,7 @@ class UserServiceIntegrationTest {
             // Then an exception should be thrown
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    userService.login(loginUserDto)
+                    usersService.login(loginUserDto)
                 }
             assertEquals("Not found User", exception.message)
         }
@@ -186,7 +186,7 @@ class UserServiceIntegrationTest {
                     email = "test@example.com",
                     password = "password123",
                 )
-            userService.register(createUserDto)
+            usersService.register(createUserDto)
 
             // When logging in with an invalid password
             val loginUserDto =
@@ -198,7 +198,7 @@ class UserServiceIntegrationTest {
             // Then an exception should be thrown
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    userService.login(loginUserDto)
+                    usersService.login(loginUserDto)
                 }
             assertEquals("Invalid password", exception.message)
         }
@@ -210,7 +210,7 @@ class UserServiceIntegrationTest {
             val userId = registerUserAndGetId()
 
             // When getting the user by ID
-            val userDto = userService.getUserById(userId)
+            val userDto = usersService.getUserById(userId)
 
             // Then the returned UserDto should have the correct values
             assertEquals("testuser", userDto.username)
@@ -233,11 +233,11 @@ class UserServiceIntegrationTest {
                     email = "user2@example.com",
                     password = "password123",
                 )
-            userService.register(user1)
-            userService.register(user2)
+            usersService.register(user1)
+            usersService.register(user2)
 
             // When getting all users
-            val allUsers = userService.getAllUsers()
+            val allUsers = usersService.getAllUsers()
 
             // Then the returned list should contain both users
             assertEquals(2, allUsers.size)
@@ -260,7 +260,7 @@ class UserServiceIntegrationTest {
                     email = email,
                     password = password,
                 )
-            userService.register(createUserDto)
+            usersService.register(createUserDto)
 
             // Get the user's ID
             val userEntity = usersRepository.findUserEntityByEmail(email)
@@ -276,7 +276,7 @@ class UserServiceIntegrationTest {
                 )
 
             // Update the user
-            val updatedUser = userService.updateUser(userId, updateUserDto)
+            val updatedUser = usersService.updateUser(userId, updateUserDto)
 
             // Then the returned UserDto should have the updated values
             assertEquals(updateUserDto.username, updatedUser.username)
@@ -300,7 +300,7 @@ class UserServiceIntegrationTest {
                     email = email,
                     password = password,
                 )
-            userService.register(createUserDto)
+            usersService.register(createUserDto)
 
             // Get the user's ID
             val userEntity = usersRepository.findUserEntityByEmail(email)
@@ -313,7 +313,7 @@ class UserServiceIntegrationTest {
                 )
 
             // Update the user
-            userService.updateUser(userId, updateUserDto)
+            usersService.updateUser(userId, updateUserDto)
 
             // Then logging in with the old password should fail
             val oldLoginDto =
@@ -322,7 +322,7 @@ class UserServiceIntegrationTest {
                     password = password,
                 )
             assertFailsWith<IllegalArgumentException> {
-                userService.login(oldLoginDto)
+                usersService.login(oldLoginDto)
             }
 
             // And logging in with the new password should succeed
@@ -331,7 +331,7 @@ class UserServiceIntegrationTest {
                     email = email,
                     password = "newpassword123",
                 )
-            val loggedInUser = userService.login(newLoginDto)
+            val loggedInUser = usersService.login(newLoginDto)
             assertNotNull(loggedInUser)
         }
 
@@ -350,7 +350,7 @@ class UserServiceIntegrationTest {
                     email = email,
                     password = password,
                 )
-            val originalUser = userService.register(createUserDto)
+            val originalUser = usersService.register(createUserDto)
 
             // Get the user's ID
             val userEntity = usersRepository.findUserEntityByEmail(email)
@@ -364,7 +364,7 @@ class UserServiceIntegrationTest {
                 )
 
             // Update the user
-            val updatedUser = userService.updateUser(userId, updateUserDto)
+            val updatedUser = usersService.updateUser(userId, updateUserDto)
 
             // Then only the bio should be updated, other fields should remain the same
             assertEquals(newBio, updatedUser.bio)
@@ -388,7 +388,7 @@ class UserServiceIntegrationTest {
                     email = email,
                     password = password,
                 )
-            val originalUser = userService.register(createUserDto)
+            val originalUser = usersService.register(createUserDto)
 
             // Get the user's ID
             val userEntity = usersRepository.findUserEntityByEmail(email)
@@ -402,7 +402,7 @@ class UserServiceIntegrationTest {
                 )
 
             // Update the user
-            val updatedUser = userService.updateUser(userId, updateUserDto)
+            val updatedUser = usersService.updateUser(userId, updateUserDto)
 
             // Then only the image should be updated, other fields should remain the same
             assertEquals(newImage, updatedUser.image)
@@ -415,14 +415,14 @@ class UserServiceIntegrationTest {
     fun testUpdateUserWithDuplicateEmail() =
         runBlocking {
             // Given two users with different emails
-            userService.register(
+            usersService.register(
                 CreateUserDto(
                     username = "user1",
                     email = "user1@example.com",
                     password = "password123",
                 ),
             )
-            userService.register(
+            usersService.register(
                 CreateUserDto(
                     username = "user2",
                     email = "user2@example.com",
@@ -443,7 +443,7 @@ class UserServiceIntegrationTest {
             // Then an exception should be thrown
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    userService.updateUser(user2Id, updateUserDto)
+                    usersService.updateUser(user2Id, updateUserDto)
                 }
             assertEquals("User with this email already registered", exception.message)
         }
@@ -452,14 +452,14 @@ class UserServiceIntegrationTest {
     fun testUpdateUserWithDuplicateUsername() =
         runBlocking {
             // Given two users with different usernames
-            userService.register(
+            usersService.register(
                 CreateUserDto(
                     username = "user1",
                     email = "user1@example.com",
                     password = "password123",
                 ),
             )
-            userService.register(
+            usersService.register(
                 CreateUserDto(
                     username = "user2",
                     email = "user2@example.com",
@@ -480,7 +480,7 @@ class UserServiceIntegrationTest {
             // Then an exception should be thrown
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    userService.updateUser(user2Id, updateUserDto)
+                    usersService.updateUser(user2Id, updateUserDto)
                 }
             assertEquals("User with this username already registered", exception.message)
         }
@@ -499,7 +499,7 @@ class UserServiceIntegrationTest {
 
             // Then an exception should be thrown
             assertFailsWith<IllegalArgumentException> {
-                userService.updateUser(invalidUserId, updateUserDto)
+                usersService.updateUser(invalidUserId, updateUserDto)
             }
         }
 }

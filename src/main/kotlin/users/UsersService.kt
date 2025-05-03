@@ -2,7 +2,7 @@ package me.bossm0n5t3r.users
 
 import me.bossm0n5t3r.uitilities.PasswordEncoder
 
-class UserService(
+class UsersService(
     private val usersRepository: UsersRepository,
     private val passwordEncoder: PasswordEncoder,
 ) {

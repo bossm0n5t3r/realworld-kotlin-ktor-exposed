@@ -13,10 +13,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class UserServiceMockTest {
+class UsersServiceMockTest {
     private val usersRepository: UsersRepository = mockk(relaxed = true)
     private val passwordEncoder: PasswordEncoder = mockk(relaxed = true)
-    private val userService: UserService = UserService(usersRepository, passwordEncoder)
+    private val usersService: UsersService = UsersService(usersRepository, passwordEncoder)
 
     @Test
     fun testRegister() =
@@ -62,7 +62,7 @@ class UserServiceMockTest {
             } returns userDto
 
             // When
-            val result = userService.register(createUserDto)
+            val result = usersService.register(createUserDto)
 
             // Then
             assertEquals(createUserDto.username, result.username)
@@ -113,7 +113,7 @@ class UserServiceMockTest {
             every { passwordEncoder.matches(loginUserDto.password, hashedPassword, salt) } returns true
 
             // When
-            val result = userService.login(loginUserDto)
+            val result = usersService.login(loginUserDto)
 
             // Then
             assertEquals("testuser", result.username)
@@ -155,7 +155,7 @@ class UserServiceMockTest {
             // When/Then
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    userService.login(loginUserDto)
+                    usersService.login(loginUserDto)
                 }
 
             assertEquals("Invalid password", exception.message)
@@ -185,7 +185,7 @@ class UserServiceMockTest {
             coEvery { usersRepository.getUserEntityById(userId.toString()) } returns userEntity
 
             // When
-            val result = userService.getUserById(userId.toString())
+            val result = usersService.getUserById(userId.toString())
 
             // Then
             assertEquals("testuser", result.username)
@@ -256,7 +256,7 @@ class UserServiceMockTest {
             } returns updatedUserDto
 
             // When
-            val result = userService.updateUser(userId, updateUserDto)
+            val result = usersService.updateUser(userId, updateUserDto)
 
             // Then
             assertEquals(updateUserDto.username, result.username)
