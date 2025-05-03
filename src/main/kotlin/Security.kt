@@ -35,3 +35,5 @@ fun Application.configureSecurity() {
 }
 
 fun ApplicationCall.userId() = principal<UserIdPrincipal>()?.name ?: error("No user ID found")
+
+fun ApplicationCall.userIdOrNull() = principal<UserIdPrincipal>()?.name
