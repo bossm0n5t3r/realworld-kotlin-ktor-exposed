@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class UserRepositoryTest {
+class UsersRepositoryTest {
     private val databaseManager: DatabaseManager = DatabaseManagerImpl()
     private val usersRepository: UsersRepository = UsersRepository(databaseManager)
 
