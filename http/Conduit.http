@@ -1,9 +1,18 @@
 # Conduit
 
+### Hello World!
+GET {{API_URL}}
+Content-Type: application/json
+
+
+### Get All Users
+GET {{API_URL}}/users
+Content-Type: application/json
+
 ###
 # group: Auth
 # @name Register
-POST {{APIURL}}/users
+POST {{API_URL}}/users
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -30,7 +39,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Auth
 # @name Login
-POST {{APIURL}}/users/login
+POST {{API_URL}}/users/login
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -55,7 +64,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Auth
 # @name Login and Remember Token
-POST {{APIURL}}/users/login
+POST {{API_URL}}/users/login
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -86,7 +95,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Auth
 # @name Current User
-GET {{APIURL}}/user
+GET {{API_URL}}/user
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -110,7 +119,7 @@ Authorization: Token {{token}}
 ###
 # group: Auth
 # @name Update User
-PUT {{APIURL}}/user
+PUT {{API_URL}}/user
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -136,7 +145,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles
 # @name All Articles
-GET {{APIURL}}/articles
+GET {{API_URL}}/articles
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -179,7 +188,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Articles
 # @name Articles by Author
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     author=johnjacob
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -223,7 +232,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Articles
 # @name Articles Favorited by Username
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     favorited={{USERNAME}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -267,7 +276,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Articles
 # @name Articles by Tag
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     tag=dragons
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -311,7 +320,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Articles, Favorite, Comments
 # @name Create Article
-POST {{APIURL}}/articles
+POST {{API_URL}}/articles
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -358,7 +367,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Feed
-GET {{APIURL}}/articles/feed
+GET {{API_URL}}/articles/feed
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -402,7 +411,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name All Articles
-GET {{APIURL}}/articles
+GET {{API_URL}}/articles
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -446,7 +455,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name All Articles with auth
-GET {{APIURL}}/articles
+GET {{API_URL}}/articles
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -490,7 +499,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Articles by Author
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     author={{USERNAME}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -535,7 +544,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Articles by Author with auth
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     author={{USERNAME}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -580,7 +589,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Single Article by slug
-GET {{APIURL}}/articles/{{slug}}
+GET {{API_URL}}/articles/{{slug}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -613,7 +622,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Articles by Tag
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     tag=dragons
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -654,7 +663,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Update Article
-PUT {{APIURL}}/articles/{{slug}}
+PUT {{API_URL}}/articles/{{slug}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -695,7 +704,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Favorite Article
-POST {{APIURL}}/articles/{{slug}}/favorite
+POST {{API_URL}}/articles/{{slug}}/favorite
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -730,7 +739,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Articles Favorited by Username
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     favorited={{USERNAME}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -768,7 +777,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Articles Favorited by Username with auth
-GET {{APIURL}}/articles?
+GET {{API_URL}}/articles?
     favorited={{USERNAME}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
@@ -806,7 +815,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Unfavorite Article
-DELETE {{APIURL}}/articles/{{slug}}/favorite
+DELETE {{API_URL}}/articles/{{slug}}/favorite
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -840,7 +849,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Create Comment for Article
-POST {{APIURL}}/articles/{{slug}}/comments
+POST {{API_URL}}/articles/{{slug}}/comments
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -874,7 +883,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name All Comments for Article
-GET {{APIURL}}/articles/{{slug}}/comments
+GET {{API_URL}}/articles/{{slug}}/comments
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -908,7 +917,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name All Comments for Article without login
-GET {{APIURL}}/articles/{{slug}}/comments
+GET {{API_URL}}/articles/{{slug}}/comments
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -941,7 +950,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Articles, Favorite, Comments
 # @name Delete Comment for Article
-DELETE {{APIURL}}/articles/{{slug}}/comments/{{commentId}}
+DELETE {{API_URL}}/articles/{{slug}}/comments/{{commentId}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -949,7 +958,7 @@ Authorization: Token {{token}}
 ###
 # group: Articles, Favorite, Comments
 # @name Delete Article
-DELETE {{APIURL}}/articles/{{slug}}
+DELETE {{API_URL}}/articles/{{slug}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -957,7 +966,7 @@ Authorization: Token {{token}}
 ###
 # group: Profiles
 # @name Register Celeb
-POST {{APIURL}}/users
+POST {{API_URL}}/users
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -984,7 +993,7 @@ X-Requested-With: XMLHttpRequest
 ###
 # group: Profiles
 # @name Profile
-GET {{APIURL}}/profiles/celeb_{{USERNAME}}
+GET {{API_URL}}/profiles/celeb_{{USERNAME}}
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -1015,7 +1024,7 @@ Authorization: Token {{token}}
 ###
 # group: Profiles
 # @name Follow Profile
-POST {{APIURL}}/profiles/celeb_{{USERNAME}}/follow
+POST {{API_URL}}/profiles/celeb_{{USERNAME}}/follow
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -1049,7 +1058,7 @@ Authorization: Token {{token}}
 ###
 # group: Profiles
 # @name Unfollow Profile
-DELETE {{APIURL}}/profiles/celeb_{{USERNAME}}/follow
+DELETE {{API_URL}}/profiles/celeb_{{USERNAME}}/follow
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Token {{token}}
@@ -1081,7 +1090,7 @@ Authorization: Token {{token}}
 ###
 # group: Tags
 # @name All Tags
-GET {{APIURL}}/tags
+GET {{API_URL}}/tags
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
