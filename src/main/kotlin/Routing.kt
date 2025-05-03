@@ -6,7 +6,11 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import me.bossm0n5t3r.users.UserService
+import me.bossm0n5t3r.users.usersApi
+import org.koin.ktor.ext.inject
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -14,9 +18,20 @@ fun Application.configureRouting() {
             call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
         }
     }
+
+    val userService: UserService by inject()
+
     routing {
         get("/") {
             call.respondText("Hello World!")
+        }
+
+        route("/api") {
+            get {
+                call.respondText("Hello World from API!")
+            }
+
+            usersApi(userService)
         }
     }
 }
