@@ -41,4 +41,9 @@ class FavoriteArticlesRepository(
         databaseManager.dbQuery {
             FavoriteArticleEntity.find { FavoriteArticles.userId eq userEntity.id }.map { it.articleId.value.toString() }
         }
+
+    suspend fun getFavoritesCount(articleEntity: ArticleEntity) =
+        databaseManager.dbQuery {
+            FavoriteArticleEntity.find { FavoriteArticles.articleId eq articleEntity.id }.count()
+        }
 }

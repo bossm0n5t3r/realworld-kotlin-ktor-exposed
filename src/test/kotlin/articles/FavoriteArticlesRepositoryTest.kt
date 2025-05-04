@@ -129,4 +129,41 @@ class FavoriteArticlesRepositoryTest {
             assertTrue(favoriteArticleIds.contains(articleEntity.id.value.toString()))
             assertTrue(favoriteArticleIds.contains(articleEntity2.id.value.toString()))
         }
+
+    @Test
+    fun testGetFavoritesCount() =
+        runBlocking {
+            // Given
+            // user1, user2, and article are created in setup
+
+            // Initially, no users have favorited the article
+            val initialCount = favoriteArticlesRepository.getFavoritesCount(articleEntity)
+            assertEquals(0, initialCount)
+
+            // When - User2 favorites the article
+            favoriteArticlesRepository.favoriteArticle(articleEntity, user2Entity)
+
+            // Then - Count should be 1
+            val countAfterOneFavorite = favoriteArticlesRepository.getFavoritesCount(articleEntity)
+            assertEquals(1, countAfterOneFavorite)
+
+            // When - Create another user and have them favorite the article
+            val user3Entity =
+                usersRepository.findUserEntityByEmail("user3@example.com")
+                    ?: usersRepository
+                        .createUser("user3", "user3@example.com", "password3", "salt3")
+                        .let { usersRepository.findUserEntityByEmail("user3@example.com")!! }
+            favoriteArticlesRepository.favoriteArticle(articleEntity, user3Entity)
+
+            // Then - Count should be 2
+            val countAfterTwoFavorites = favoriteArticlesRepository.getFavoritesCount(articleEntity)
+            assertEquals(2, countAfterTwoFavorites)
+
+            // When - User2 unfavorites the article
+            favoriteArticlesRepository.unfavoriteArticle(articleEntity, user2Entity)
+
+            // Then - Count should be 1 again
+            val countAfterUnfavorite = favoriteArticlesRepository.getFavoritesCount(articleEntity)
+            assertEquals(1, countAfterUnfavorite)
+        }
 }
