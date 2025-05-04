@@ -11,6 +11,8 @@ import me.bossm0n5t3r.tags.Tags
 import me.bossm0n5t3r.users.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -40,7 +42,11 @@ class DatabaseManagerImpl : DatabaseManager {
 
     override val database: Database = Database.connect(hikariDataSource())
 
-    override suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO, db = database) { block() }
+    override suspend fun <T> dbQuery(block: suspend () -> T): T =
+        newSuspendedTransaction(Dispatchers.IO, db = database) {
+            addLogger(StdOutSqlLogger)
+            block()
+        }
 
     private val tables = arrayOf(Users, Followings, Articles, FavoriteArticles, Tags, ArticleTags)
 
