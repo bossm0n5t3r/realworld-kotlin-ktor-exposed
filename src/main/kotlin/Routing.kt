@@ -10,6 +10,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import me.bossm0n5t3r.profiles.ProfilesService
 import me.bossm0n5t3r.profiles.profilesApi
+import me.bossm0n5t3r.tags.TagsService
+import me.bossm0n5t3r.tags.tagsApi
 import me.bossm0n5t3r.users.UsersService
 import me.bossm0n5t3r.users.usersApi
 import org.koin.ktor.ext.inject
@@ -23,6 +25,7 @@ fun Application.configureRouting() {
 
     val usersService: UsersService by inject()
     val profilesService: ProfilesService by inject()
+    val tagsService: TagsService by inject()
 
     routing {
         get("/") {
@@ -36,6 +39,7 @@ fun Application.configureRouting() {
 
             usersApi(usersService)
             profilesApi(profilesService)
+            tagsApi(tagsService)
         }
     }
 }
