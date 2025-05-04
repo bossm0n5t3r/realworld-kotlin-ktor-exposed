@@ -1,5 +1,6 @@
-package me.bossm0n5t3r.articles
+package me.bossm0n5t3r.tags
 
+import me.bossm0n5t3r.articles.ArticleEntity
 import me.bossm0n5t3r.configurations.DatabaseManager
 
 class TagsRepository(

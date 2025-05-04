@@ -1,5 +1,6 @@
-package me.bossm0n5t3r.articles
+package me.bossm0n5t3r.tags
 
+import me.bossm0n5t3r.articles.Articles
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

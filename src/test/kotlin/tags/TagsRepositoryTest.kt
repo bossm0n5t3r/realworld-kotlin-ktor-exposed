@@ -1,6 +1,9 @@
-package me.bossm0n5t3r.articles
+package me.bossm0n5t3r.tags
 
 import kotlinx.coroutines.runBlocking
+import me.bossm0n5t3r.articles.ArticleEntity
+import me.bossm0n5t3r.articles.ArticlesRepository
+import me.bossm0n5t3r.articles.CreateArticleDto
 import me.bossm0n5t3r.configurations.DatabaseManager
 import me.bossm0n5t3r.configurations.DatabaseManagerImpl
 import me.bossm0n5t3r.users.UserEntity
