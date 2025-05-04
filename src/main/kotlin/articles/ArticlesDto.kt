@@ -1,5 +1,6 @@
 package me.bossm0n5t3r.articles
 
+import io.ktor.http.Parameters
 import me.bossm0n5t3r.profiles.ProfileDto
 
 data class ArticleWrapper<T>(
@@ -24,7 +25,23 @@ data class UpdateArticleDto(
     val body: String? = null,
 )
 
-data class ArticlesDto(
+data class ArticleFilterDto(
+    val tag: String? = null,
+    val author: String? = null,
+    val favorited: String? = null,
+    val limit: Int = 20,
+    val offset: Int = 0,
+) {
+    constructor(params: Parameters) : this(
+        tag = params["tag"],
+        author = params["author"],
+        favorited = params["favorited"],
+        limit = params["limit"]?.toIntOrNull() ?: 20,
+        offset = params["offset"]?.toIntOrNull() ?: 0,
+    )
+}
+
+data class ArticleDto(
     val slug: String,
     val title: String,
     val description: String,
@@ -33,6 +50,6 @@ data class ArticlesDto(
     val createdAt: String,
     val updatedAt: String,
     val favorited: Boolean = false,
-    val favoritesCount: Int = 0,
+    val favoritesCount: Long = 0,
     val author: ProfileDto,
 )
