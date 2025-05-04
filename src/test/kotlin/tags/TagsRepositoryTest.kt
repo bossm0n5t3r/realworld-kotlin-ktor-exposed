@@ -132,4 +132,82 @@ class TagsRepositoryTest {
                 assert(allTags.contains(tagName)) { "Expected tag '$tagName' not found in result" }
             }
         }
+
+    @Test
+    fun testGetTagOrNull_ExistingTag() =
+        runBlocking {
+            // Given
+            val tagName = "existingtag"
+            tagsRepository.getOrCreateTag(tagName)
+
+            // When
+            val tagEntity = tagsRepository.getTagOrNull(tagName)
+
+            // Then
+            assertNotNull(tagEntity)
+            assertEquals(tagName, tagEntity.tagName)
+        }
+
+    @Test
+    fun testGetTagOrNull_NonExistingTag() =
+        runBlocking {
+            // Given
+            val tagName = "nonexistingtag"
+
+            // When
+            val tagEntity = tagsRepository.getTagOrNull(tagName)
+
+            // Then
+            assertEquals(null, tagEntity)
+        }
+
+    @Test
+    fun testGetAllTagsByArticle() =
+        runBlocking {
+            // Given
+            val tagNames = listOf("tag1", "tag2", "tag3")
+            val tagEntities = tagNames.map { tagsRepository.getOrCreateTag(it) }
+
+            // Create article-tag relationships
+            tagEntities.forEach { tagsRepository.createArticleTagEntity(articleEntity, it) }
+
+            // When
+            val retrievedTags = tagsRepository.getAllTagsByArticle(articleEntity)
+
+            // Then
+            assertEquals(tagNames.size, retrievedTags.size)
+            tagEntities.forEach { tagEntity ->
+                assert(retrievedTags.any { it.id == tagEntity.id }) { "Expected tag '${tagEntity.tagName}' not found in result" }
+            }
+        }
+
+    @Test
+    fun testIsArticleHasTag_True() =
+        runBlocking {
+            // Given
+            val tagName = "testtag"
+            val tagEntity = tagsRepository.getOrCreateTag(tagName)
+            tagsRepository.createArticleTagEntity(articleEntity, tagEntity)
+
+            // When
+            val hasTag = tagsRepository.isArticleHasTag(articleEntity, tagEntity)
+
+            // Then
+            assertEquals(true, hasTag)
+        }
+
+    @Test
+    fun testIsArticleHasTag_False() =
+        runBlocking {
+            // Given
+            val tagName = "nonassociatedtag"
+            val tagEntity = tagsRepository.getOrCreateTag(tagName)
+            // Not creating an article-tag relationship
+
+            // When
+            val hasTag = tagsRepository.isArticleHasTag(articleEntity, tagEntity)
+
+            // Then
+            assertEquals(false, hasTag)
+        }
 }
