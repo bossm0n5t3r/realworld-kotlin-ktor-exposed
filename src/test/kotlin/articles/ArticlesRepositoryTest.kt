@@ -260,7 +260,11 @@ class ArticlesRepositoryTest {
             // Ensure first and second page articles are different
             val firstPageIds = firstPage.map { it.id.value }
             val secondPageIds = secondPage.map { it.id.value }
-            assertEquals(0, firstPageIds.intersect(secondPageIds).size)
+            assertEquals(
+                0,
+                firstPageIds.intersect(secondPageIds).size,
+                "First and second page should not have same article IDs: $firstPageIds, $secondPageIds",
+            )
 
             // When - Last page with fewer items (limit 3, offset 9)
             val lastPage = articlesRepository.getAllArticles(limit = 3, offset = 9)
