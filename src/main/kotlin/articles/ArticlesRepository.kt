@@ -16,9 +16,9 @@ class ArticlesRepository(
     ) = databaseManager.dbQuery {
         ArticleEntity
             .find { if (author != null) Articles.authorId eq author.id else Op.TRUE }
-            .limit(limit)
-            .offset(offset.toLong())
             .orderBy(Articles.createdAt to SortOrder.DESC)
+            .offset(offset.toLong())
+            .limit(limit)
             .toList()
     }
 
