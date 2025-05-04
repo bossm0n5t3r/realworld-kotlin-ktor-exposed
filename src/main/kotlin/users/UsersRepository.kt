@@ -1,6 +1,7 @@
 package me.bossm0n5t3r.users
 
 import me.bossm0n5t3r.configurations.DatabaseManager
+import org.jetbrains.exposed.dao.id.EntityID
 import java.util.UUID
 
 class UsersRepository(
@@ -35,6 +36,8 @@ class UsersRepository(
         val uuid = UUID.fromString(id)
         return databaseManager.dbQuery { requireNotNull(UserEntity.findById(uuid)) { "Not found user by id $id" } }
     }
+
+    suspend fun getUserEntityById(id: EntityID<UUID>) = databaseManager.dbQuery { UserEntity[id] }
 
     suspend fun getAllUsers() = databaseManager.dbQuery { UserEntity.all().map { UserDto(it) } }
 
