@@ -20,4 +20,6 @@ class TagsRepository(
             this.tagId = tagEntity.id
         }
     }
+
+    suspend fun getAllTags() = databaseManager.dbQuery { TagEntity.all().map { it.tagName } }
 }

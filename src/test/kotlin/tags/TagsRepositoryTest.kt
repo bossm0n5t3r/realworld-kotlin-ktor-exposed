@@ -115,4 +115,21 @@ class TagsRepositoryTest {
                 assertEquals(tagEntities[i].id, articleTagEntities[i].tagId)
             }
         }
+
+    @Test
+    fun testGetAllTags() =
+        runBlocking {
+            // Given
+            val tagNames = listOf("realworld", "kotlin", "ktor", "exposed")
+            tagNames.forEach { tagsRepository.getOrCreateTag(it) }
+
+            // When
+            val allTags = tagsRepository.getAllTags()
+
+            // Then
+            assertEquals(tagNames.size, allTags.size)
+            tagNames.forEach { tagName ->
+                assert(allTags.contains(tagName)) { "Expected tag '$tagName' not found in result" }
+            }
+        }
 }
