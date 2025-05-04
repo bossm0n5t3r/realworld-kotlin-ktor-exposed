@@ -4,6 +4,7 @@ import me.bossm0n5t3r.configurations.DatabaseManager
 import me.bossm0n5t3r.uitilities.StringUtil.toSlug
 import me.bossm0n5t3r.users.UserEntity
 import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.SortOrder
 
 class ArticlesRepository(
     private val databaseManager: DatabaseManager,
@@ -17,6 +18,7 @@ class ArticlesRepository(
             .find { if (author != null) Articles.authorId eq author.id else Op.TRUE }
             .limit(limit)
             .offset(offset.toLong())
+            .orderBy(Articles.createdAt to SortOrder.DESC)
             .toList()
     }
 

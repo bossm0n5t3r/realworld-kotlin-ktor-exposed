@@ -268,4 +268,42 @@ class ArticlesRepositoryTest {
             // Then
             assertEquals(1, lastPage.size)
         }
+
+    @Test
+    fun testGetAllArticles_OrderByCreatedAtDesc() =
+        runBlocking {
+            // Given
+            val totalArticles = 5
+            val createdArticles = mutableListOf<ArticleEntity>()
+
+            repeat(totalArticles) { index ->
+                val createArticleDto =
+                    CreateArticleDto(
+                        title = "Test Article $index",
+                        description = "Description $index",
+                        body = "Body $index",
+                    )
+                val article = articlesRepository.createArticle(userEntity, createArticleDto)
+                createdArticles.add(article)
+                // Add a small delay to ensure different creation timestamps
+                Thread.sleep(100)
+            }
+
+            // When
+            val retrievedArticles = articlesRepository.getAllArticles(limit = 10, offset = 0)
+
+            // Then
+            assertEquals(totalArticles, retrievedArticles.size)
+
+            // Verify articles are ordered by createdAt in descending order
+            for (i in 0 until retrievedArticles.size - 1) {
+                val currentArticle = retrievedArticles[i]
+                val nextArticle = retrievedArticles[i + 1]
+                assert(currentArticle.createdAt >= nextArticle.createdAt) {
+                    "Articles are not ordered by createdAt in descending order. " +
+                        "Article at index $i (created at ${currentArticle.createdAt}) " +
+                        "should be created after article at index ${i + 1} (created at ${nextArticle.createdAt})"
+                }
+            }
+        }
 }
