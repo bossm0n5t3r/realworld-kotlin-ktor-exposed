@@ -134,8 +134,8 @@ class ProfilesServiceMockTest {
 
             // Verify that the repository methods were called
             coVerify { usersRepository.findUserEntityByUsername(username) }
-            coVerify(exactly = 0) { usersRepository.getUserEntityById(any()) }
-            coVerify(exactly = 0) { followingsRepository.isFollowing(any(), any()) }
+            coVerify(exactly = 0) { usersRepository.getUserEntityById(any<String>()) }
+            coVerify(exactly = 0) { followingsRepository.isFollowing(any<String>(), any<String>()) }
         }
 
     @Test
@@ -156,8 +156,8 @@ class ProfilesServiceMockTest {
 
             // Verify that the repository methods were called
             coVerify { usersRepository.findUserEntityByUsername(username) }
-            coVerify(exactly = 0) { usersRepository.getUserEntityById(any()) }
-            coVerify(exactly = 0) { followingsRepository.isFollowing(any(), any()) }
+            coVerify(exactly = 0) { usersRepository.getUserEntityById(any<String>()) }
+            coVerify(exactly = 0) { followingsRepository.isFollowing(any<String>(), any<String>()) }
         }
 
     @Test
@@ -216,8 +216,8 @@ class ProfilesServiceMockTest {
 
             // Verify that the repository methods were called
             coVerify { usersRepository.findUserEntityByUsername(username) }
-            coVerify(exactly = 0) { usersRepository.getUserEntityById(any()) }
-            coVerify(exactly = 0) { followingsRepository.addFollowing(any(), any()) }
+            coVerify(exactly = 0) { usersRepository.getUserEntityById(any<String>()) }
+            coVerify(exactly = 0) { followingsRepository.addFollowing(any<String>(), any<String>()) }
         }
 
     @Test
@@ -276,7 +276,7 @@ class ProfilesServiceMockTest {
 
             // Verify that the repository methods were called
             coVerify { usersRepository.findUserEntityByUsername(username) }
-            coVerify(exactly = 0) { usersRepository.getUserEntityById(any()) }
+            coVerify(exactly = 0) { usersRepository.getUserEntityById(any<String>()) }
             coVerify(exactly = 0) { followingsRepository.deleteFollowing(any(), any()) }
         }
 }
