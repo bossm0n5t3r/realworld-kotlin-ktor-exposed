@@ -10,7 +10,7 @@ import java.time.Instant
 import java.util.UUID
 
 object Articles : UUIDTable() {
-    val slug = varchar("slug", 255)
+    val slug = varchar("slug", 255).uniqueIndex()
     var title = varchar("title", 255)
     val description = varchar("description", 255)
     val body = varchar("body", 255)
