@@ -5,6 +5,7 @@ import me.bossm0n5t3r.uitilities.StringUtil.toSlug
 import me.bossm0n5t3r.users.UserEntity
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SortOrder
+import java.time.Instant
 
 class ArticlesRepository(
     private val databaseManager: DatabaseManager,
@@ -32,6 +33,8 @@ class ArticlesRepository(
             this.description = createArticleDto.description
             this.body = createArticleDto.body
             this.authorId = author.id
+            this.createdAt = Instant.now()
+            this.updatedAt = Instant.now()
         }
     }
 
@@ -43,6 +46,7 @@ class ArticlesRepository(
         articleEntity.slug = updateArticleDto.title?.toSlug() ?: articleEntity.slug
         articleEntity.description = updateArticleDto.description ?: articleEntity.description
         articleEntity.body = updateArticleDto.body ?: articleEntity.body
+        articleEntity.updatedAt = Instant.now()
         articleEntity.flush()
         articleEntity
     }
