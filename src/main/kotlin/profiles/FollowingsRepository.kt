@@ -15,15 +15,10 @@ class FollowingsRepository(
     suspend fun isFollowing(
         userId: String,
         followerId: String,
-    ) = isFollowing(UUID.fromString(userId), UUID.fromString(followerId))
-
-    suspend fun isFollowing(
-        userId: UUID,
-        followerId: UUID,
     ) = databaseManager.dbQuery {
         FollowingEntity
             .find {
-                (Followings.userId eq userId) and (Followings.followerId eq followerId)
+                (Followings.userId eq UUID.fromString(userId)) and (Followings.followerId eq UUID.fromString(followerId))
             }.empty()
             .not()
     }
