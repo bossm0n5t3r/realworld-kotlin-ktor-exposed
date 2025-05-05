@@ -10,6 +10,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import me.bossm0n5t3r.articles.ArticlesService
 import me.bossm0n5t3r.articles.articlesApi
+import me.bossm0n5t3r.configurations.LOGGER
 import me.bossm0n5t3r.profiles.ProfilesService
 import me.bossm0n5t3r.profiles.profilesApi
 import me.bossm0n5t3r.tags.TagsService
@@ -21,6 +22,7 @@ import org.koin.ktor.ext.inject
 fun Application.configureRouting() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            LOGGER.error("Exception: {}, ", cause.message, cause)
             call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
         }
     }
