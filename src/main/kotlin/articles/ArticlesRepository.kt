@@ -55,4 +55,9 @@ class ArticlesRepository(
         databaseManager.dbQuery {
             ArticleEntity.find { Articles.slug eq slug }.singleOrNull()
         }
+
+    suspend fun deleteArticle(articleEntity: ArticleEntity) =
+        databaseManager.dbQuery {
+            articleEntity.delete()
+        }
 }

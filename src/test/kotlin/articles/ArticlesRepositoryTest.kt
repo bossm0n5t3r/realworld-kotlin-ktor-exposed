@@ -310,4 +310,30 @@ class ArticlesRepositoryTest {
                 }
             }
         }
+
+    @Test
+    fun testDeleteArticle() =
+        runBlocking {
+            // Given
+            val createArticleDto =
+                CreateArticleDto(
+                    title = "Article to Delete",
+                    description = "This article will be deleted",
+                    body = "This is the body of the article to be deleted",
+                )
+            val createdArticle = articlesRepository.createArticle(userEntity, createArticleDto)
+            val slug = createdArticle.slug
+
+            // Verify article exists before deletion
+            val articleBeforeDeletion = articlesRepository.getArticleBySlug(slug)
+            assertNotNull(articleBeforeDeletion)
+            assertEquals(createdArticle.id, articleBeforeDeletion.id)
+
+            // When
+            articlesRepository.deleteArticle(createdArticle)
+
+            // Then
+            val articleAfterDeletion = articlesRepository.getArticleBySlug(slug)
+            assertNull(articleAfterDeletion, "Article should be null after deletion")
+        }
 }
