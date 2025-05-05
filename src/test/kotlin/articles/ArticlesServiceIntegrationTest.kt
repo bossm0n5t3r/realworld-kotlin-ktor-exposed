@@ -10,6 +10,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -418,5 +419,299 @@ class ArticlesServiceIntegrationTest {
             val firstPageSlugs = firstPage.articles.map { it.slug }.toSet()
             val secondPageSlugs = secondPage.articles.map { it.slug }.toSet()
             assertEquals(0, firstPageSlugs.intersect(secondPageSlugs).size)
+        }
+
+    @Test
+    fun testGetArticleBySlug() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+            val user2Entity = usersRepository.getUserEntityById(user2Id)
+
+            // Create an article
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Test Article",
+                        description = "Test Description",
+                        body = "Test Body",
+                        tagList = listOf("tag1", "tag2"),
+                    ),
+                )
+
+            // Add tags to article
+            val tag1 = tagsRepository.getOrCreateTag("tag1")
+            val tag2 = tagsRepository.getOrCreateTag("tag2")
+            tagsRepository.createArticleTagEntity(article, tag1)
+            tagsRepository.createArticleTagEntity(article, tag2)
+
+            // User2 favorites the article
+            favoriteArticlesRepository.favoriteArticle(article, user2Entity)
+
+            // When
+            val result = articlesService.getArticleBySlug(article.slug)
+
+            // Then
+            assertEquals(article.slug, result.article.slug)
+            assertEquals("Test Article", result.article.title)
+            assertEquals("Test Description", result.article.description)
+            assertEquals("Test Body", result.article.body)
+            assertEquals(2, result.article.tagList.size)
+            assertTrue(result.article.tagList.contains("tag1"))
+            assertTrue(result.article.tagList.contains("tag2"))
+            assertEquals(article.createdAt.toString(), result.article.createdAt)
+            assertEquals(article.updatedAt.toString(), result.article.updatedAt)
+            assertFalse(result.article.favorited) // Not favorited by current user (no user provided)
+            assertEquals(1, result.article.favoritesCount)
+            assertEquals(user1Username, result.article.author.username)
+            assertFalse(result.article.author.following)
+        }
+
+    @Test
+    fun testCreateArticle() =
+        runBlocking {
+            // Given
+            val createArticleDto =
+                CreateArticleDto(
+                    title = "New Article",
+                    description = "New Description",
+                    body = "New Body",
+                    tagList = listOf("newtag1", "newtag2"),
+                )
+
+            // When
+            val result = articlesService.createArticle(user1Id, createArticleDto)
+
+            // Then
+            assertEquals("New Article", result.article.title)
+            assertEquals("New Description", result.article.description)
+            assertEquals("New Body", result.article.body)
+            assertEquals(2, result.article.tagList.size)
+            assertTrue(result.article.tagList.contains("newtag1"))
+            assertTrue(result.article.tagList.contains("newtag2"))
+            assertFalse(result.article.favorited)
+            assertEquals(0, result.article.favoritesCount)
+            assertEquals(user1Username, result.article.author.username)
+            assertFalse(result.article.author.following)
+
+            // Verify article was created in the database
+            val createdArticle = articlesRepository.getArticleBySlug(result.article.slug)
+            assertNotNull(createdArticle)
+            assertEquals("New Article", createdArticle.title)
+            assertEquals("New Description", createdArticle.description)
+            assertEquals("New Body", createdArticle.body)
+
+            // Verify tags were created
+            val articleTags = tagsRepository.getAllTagsByArticle(createdArticle)
+            assertEquals(2, articleTags.size)
+            val tagNames = articleTags.map { it.tagName }
+            assertTrue(tagNames.contains("newtag1"))
+            assertTrue(tagNames.contains("newtag2"))
+        }
+
+    @Test
+    fun testUpdateArticle() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+
+            // Create an article
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Original Title",
+                        description = "Original Description",
+                        body = "Original Body",
+                    ),
+                )
+
+            val updateArticleDto =
+                UpdateArticleDto(
+                    title = "Updated Title",
+                    description = "Updated Description",
+                    body = "Updated Body",
+                )
+
+            // When
+            val result = articlesService.updateArticle(user1Id, article.slug, updateArticleDto)
+
+            // Then
+            assertEquals("Updated Title", result.article.title)
+            assertEquals("Updated Description", result.article.description)
+            assertEquals("Updated Body", result.article.body)
+
+            // Verify article was updated in the database
+            // Note: When title is updated, the slug is also updated, so we need to use the new slug
+            val updatedArticle = articlesRepository.getArticleBySlug(result.article.slug)
+            assertNotNull(updatedArticle)
+            assertEquals("Updated Title", updatedArticle.title)
+            assertEquals("Updated Description", updatedArticle.description)
+            assertEquals("Updated Body", updatedArticle.body)
+        }
+
+    @Test
+    fun testUpdateArticleNotAuthor() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "User1 Article",
+                        description = "User1 Description",
+                        body = "User1 Body",
+                    ),
+                )
+
+            val updateArticleDto =
+                UpdateArticleDto(
+                    title = "Updated By User2",
+                )
+
+            // When/Then - User2 tries to update User1's article
+            assertFailsWith<IllegalStateException> {
+                articlesService.updateArticle(user2Id, article.slug, updateArticleDto)
+            }
+
+            // Verify article was not updated
+            val unchangedArticle = articlesRepository.getArticleBySlug(article.slug)
+            assertNotNull(unchangedArticle)
+            assertEquals("User1 Article", unchangedArticle.title)
+        }
+
+    @Test
+    fun testDeleteArticle() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+
+            // Create an article
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Article To Delete",
+                        description = "Delete Description",
+                        body = "Delete Body",
+                    ),
+                )
+
+            // Verify article exists
+            val createdArticle = articlesRepository.getArticleBySlug(article.slug)
+            assertNotNull(createdArticle)
+
+            // When
+            articlesService.deleteArticle(user1Id, article.slug)
+
+            // Then - Article should be deleted
+            val deletedArticle = articlesRepository.getArticleBySlug(article.slug)
+            assertEquals(null, deletedArticle)
+        }
+
+    @Test
+    fun testDeleteArticleNotAuthor() =
+        runBlocking<Unit> {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "User1 Article",
+                        description = "User1 Description",
+                        body = "User1 Body",
+                    ),
+                )
+
+            // When/Then - User2 tries to delete User1's article
+            assertFailsWith<IllegalStateException> {
+                articlesService.deleteArticle(user2Id, article.slug)
+            }
+
+            // Verify article was not deleted
+            val unchangedArticle = articlesRepository.getArticleBySlug(article.slug)
+            assertNotNull(unchangedArticle)
+        }
+
+    @Test
+    fun testFavoriteArticle() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+            val user2Entity = usersRepository.getUserEntityById(user2Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Article To Favorite",
+                        description = "Favorite Description",
+                        body = "Favorite Body",
+                    ),
+                )
+
+            // When - User2 favorites the article
+            val result = articlesService.favoriteArticle(user2Id, article.slug)
+
+            // Then
+            assertTrue(result.article.favorited)
+            assertEquals(1, result.article.favoritesCount)
+
+            // Verify article is favorited in the database
+            val isFavorited = favoriteArticlesRepository.isFavoritedArticle(article, user2Entity)
+            assertTrue(isFavorited)
+
+            // Verify favorites count
+            val favoritesCount = favoriteArticlesRepository.getFavoritesCount(article)
+            assertEquals(1, favoritesCount)
+        }
+
+    @Test
+    fun testUnfavoriteArticle() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+            val user2Entity = usersRepository.getUserEntityById(user2Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Article To Unfavorite",
+                        description = "Unfavorite Description",
+                        body = "Unfavorite Body",
+                    ),
+                )
+
+            // User2 favorites the article
+            favoriteArticlesRepository.favoriteArticle(article, user2Entity)
+
+            // Verify article is favorited
+            val isFavoritedBefore = favoriteArticlesRepository.isFavoritedArticle(article, user2Entity)
+            assertTrue(isFavoritedBefore)
+
+            // When - User2 unfavorites the article
+            val result = articlesService.unfavoriteArticle(user2Id, article.slug)
+
+            // Then
+            assertFalse(result.article.favorited)
+            assertEquals(0, result.article.favoritesCount)
+
+            // Verify article is unfavorited in the database
+            val isFavoritedAfter = favoriteArticlesRepository.isFavoritedArticle(article, user2Entity)
+            assertFalse(isFavoritedAfter)
+
+            // Verify favorites count
+            val favoritesCount = favoriteArticlesRepository.getFavoritesCount(article)
+            assertEquals(0, favoritesCount)
         }
 }
