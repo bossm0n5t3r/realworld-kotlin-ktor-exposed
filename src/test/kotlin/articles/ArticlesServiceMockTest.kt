@@ -1,6 +1,7 @@
 package me.bossm0n5t3r.articles
 
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -16,6 +17,7 @@ import java.time.Instant
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -336,5 +338,592 @@ class ArticlesServiceMockTest {
             coVerify { usersRepository.findUserEntityByUsername(favoritedUsername) }
             coVerify { articlesRepository.getAllArticles(null, 20, 0) }
             coVerify { favoriteArticlesRepository.isFavoritedArticle(articleEntity, favoritedUserEntity) }
+        }
+
+    @Test
+    fun testGetArticleBySlug() =
+        runBlocking {
+            // Given
+            val slug = "test-article-slug"
+            val articleId = UUID.randomUUID()
+            val authorId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+            val now = Instant.now()
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+            every { articleEntity.title } returns "Test Article"
+            every { articleEntity.description } returns "Test Description"
+            every { articleEntity.body } returns "Test Body"
+            every { articleEntity.authorId } returns EntityID(authorId, Users)
+            every { articleEntity.createdAt } returns now
+            every { articleEntity.updatedAt } returns now
+
+            // Set up the author entity
+            val authorEntity = mockk<UserEntity>()
+            every { authorEntity.id } returns EntityID(authorId, Users)
+            every { authorEntity.username } returns "testauthor"
+            every { authorEntity.bio } returns "Author Bio"
+            every { authorEntity.image } returns "https://example.com/author.jpg"
+
+            // Mock repository methods
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { usersRepository.getUserEntityById(EntityID(authorId, Users)) } returns authorEntity
+            coEvery { tagsRepository.getAllTagsByArticle(articleEntity) } returns emptyList()
+            coEvery { favoriteArticlesRepository.getFavoritesCount(articleEntity) } returns 0
+            // No need to mock isFavoritedArticle with null as it's handled by the Elvis operator in the service
+            coEvery { followingsRepository.isFollowing(any(), any()) } returns false
+
+            // When
+            val result = articlesService.getArticleBySlug(slug)
+
+            // Then
+            assertEquals(slug, result.article.slug)
+            assertEquals("Test Article", result.article.title)
+            assertEquals("Test Description", result.article.description)
+            assertEquals("Test Body", result.article.body)
+            assertEquals(emptyList(), result.article.tagList)
+            assertEquals(now.toString(), result.article.createdAt)
+            assertEquals(now.toString(), result.article.updatedAt)
+            assertFalse(result.article.favorited)
+            assertEquals(0, result.article.favoritesCount)
+            assertEquals("testauthor", result.article.author.username)
+            assertEquals("Author Bio", result.article.author.bio)
+            assertEquals("https://example.com/author.jpg", result.article.author.image)
+            assertFalse(result.article.author.following)
+
+            // Verify repository calls
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { usersRepository.getUserEntityById(EntityID(authorId, Users)) }
+            coVerify { tagsRepository.getAllTagsByArticle(articleEntity) }
+            coVerify { favoriteArticlesRepository.getFavoritesCount(articleEntity) }
+        }
+
+    @Test
+    fun testGetArticleBySlugNotFound() =
+        runBlocking {
+            // Given
+            val slug = "non-existent-article"
+
+            // Mock repository methods
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.getArticleBySlug(slug)
+            }
+
+            // Verify repository calls
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testCreateArticle() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val createArticleDto =
+                CreateArticleDto(
+                    title = "New Article",
+                    description = "New Description",
+                    body = "New Body",
+                    tagList = listOf("tag1", "tag2"),
+                )
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+            val now = Instant.now()
+
+            // Set up the user entity properties
+            val userUUID = UUID.fromString(userId)
+            val userEntityId = mockk<EntityID<UUID>>()
+            every { userEntity.id } returns userEntityId
+            every { userEntityId.value } returns userUUID
+            every { userEntity.username } returns "testuser"
+            every { userEntity.bio } returns "Test Bio"
+            every { userEntity.image } returns "https://example.com/testuser.jpg"
+
+            // Set up the article entity properties
+            val articleEntityId = mockk<EntityID<UUID>>()
+            every { articleEntity.id } returns articleEntityId
+            every { articleEntityId.value } returns articleId
+            every { articleEntity.slug } returns "new-article"
+            every { articleEntity.title } returns createArticleDto.title
+            every { articleEntity.description } returns createArticleDto.description
+            every { articleEntity.body } returns createArticleDto.body
+            // Make sure the article's authorId equals the user's id for the getArticleDto method
+            every { articleEntity.authorId } returns userEntityId
+            every { articleEntity.createdAt } returns now
+            every { articleEntity.updatedAt } returns now
+
+            // Set up tag entities
+            val tag1Entity = mockk<TagEntity>()
+            val tag2Entity = mockk<TagEntity>()
+            every { tag1Entity.tagName } returns "tag1"
+            every { tag2Entity.tagName } returns "tag2"
+
+            // Set up the author entity (same as user in this case)
+            val authorEntity = userEntity
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { usersRepository.getUserEntityById(userEntityId) } returns authorEntity
+            coEvery { articlesRepository.createArticle(userEntity, createArticleDto) } returns articleEntity
+            coEvery { tagsRepository.getOrCreateTag("tag1") } returns tag1Entity
+            coEvery { tagsRepository.getOrCreateTag("tag2") } returns tag2Entity
+            coEvery { tagsRepository.createArticleTagEntity(articleEntity, any()) } returns mockk()
+            coEvery { tagsRepository.getAllTagsByArticle(articleEntity) } returns listOf(tag1Entity, tag2Entity)
+            coEvery { favoriteArticlesRepository.getFavoritesCount(articleEntity) } returns 0
+            coEvery { favoriteArticlesRepository.isFavoritedArticle(articleEntity, userEntity) } returns false
+            coEvery { followingsRepository.isFollowing(userUUID.toString(), userUUID.toString()) } returns false
+
+            // When
+            val result = articlesService.createArticle(userId, createArticleDto)
+
+            // Then
+            assertEquals("new-article", result.article.slug)
+            assertEquals(createArticleDto.title, result.article.title)
+            assertEquals(createArticleDto.description, result.article.description)
+            assertEquals(createArticleDto.body, result.article.body)
+            assertEquals(createArticleDto.tagList, result.article.tagList)
+            assertEquals(now.toString(), result.article.createdAt)
+            assertEquals(now.toString(), result.article.updatedAt)
+            assertFalse(result.article.favorited)
+            assertEquals(0, result.article.favoritesCount)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.createArticle(userEntity, createArticleDto) }
+            coVerify { tagsRepository.getOrCreateTag("tag1") }
+            coVerify { tagsRepository.getOrCreateTag("tag2") }
+            coVerify { tagsRepository.createArticleTagEntity(articleEntity, tag1Entity) }
+            coVerify { tagsRepository.createArticleTagEntity(articleEntity, tag2Entity) }
+        }
+
+    @Test
+    fun testUpdateArticle() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "existing-article"
+            val updateArticleDto =
+                UpdateArticleDto(
+                    title = "Updated Title",
+                    description = "Updated Description",
+                    body = "Updated Body",
+                )
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+            val updatedArticleEntity = mockk<ArticleEntity>()
+            val now = Instant.now()
+
+            // Set up the user entity properties
+            val userUUID = UUID.fromString(userId)
+            val userEntityId = mockk<EntityID<UUID>>()
+            every { userEntity.id } returns userEntityId
+            every { userEntityId.value } returns userUUID
+            every { userEntity.username } returns "testuser"
+            every { userEntity.bio } returns "Test Bio"
+            every { userEntity.image } returns "https://example.com/testuser.jpg"
+
+            // Set up the article entity properties
+            val articleEntityId = mockk<EntityID<UUID>>()
+            every { articleEntity.id } returns articleEntityId
+            every { articleEntityId.value } returns articleId
+            every { articleEntity.slug } returns slug
+            // Make sure the article's authorId equals the user's id for the authorization check
+            every { articleEntity.authorId } returns userEntityId
+
+            // Set up the updated article entity properties
+            val updatedArticleEntityId = mockk<EntityID<UUID>>()
+            every { updatedArticleEntity.id } returns updatedArticleEntityId
+            every { updatedArticleEntityId.value } returns articleId
+            every { updatedArticleEntity.slug } returns slug
+            every { updatedArticleEntity.title } returns updateArticleDto.title!!
+            every { updatedArticleEntity.description } returns updateArticleDto.description!!
+            every { updatedArticleEntity.body } returns updateArticleDto.body!!
+            // Make sure the updated article's authorId equals the user's id
+            every { updatedArticleEntity.authorId } returns userEntityId
+            every { updatedArticleEntity.createdAt } returns now
+            every { updatedArticleEntity.updatedAt } returns now
+
+            // Set up the author entity (same as user in this case)
+            val authorEntity = userEntity
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { usersRepository.getUserEntityById(userEntityId) } returns authorEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { articlesRepository.updateArticle(articleEntity, updateArticleDto) } returns updatedArticleEntity
+            coEvery { tagsRepository.getAllTagsByArticle(updatedArticleEntity) } returns emptyList()
+            coEvery { favoriteArticlesRepository.getFavoritesCount(updatedArticleEntity) } returns 0
+            coEvery { favoriteArticlesRepository.isFavoritedArticle(updatedArticleEntity, userEntity) } returns false
+            coEvery { followingsRepository.isFollowing(userUUID.toString(), userUUID.toString()) } returns false
+
+            // When
+            val result = articlesService.updateArticle(userId, slug, updateArticleDto)
+
+            // Then
+            assertEquals(slug, result.article.slug)
+            assertEquals(updateArticleDto.title, result.article.title)
+            assertEquals(updateArticleDto.description, result.article.description)
+            assertEquals(updateArticleDto.body, result.article.body)
+            assertEquals(emptyList(), result.article.tagList)
+            assertEquals(now.toString(), result.article.createdAt)
+            assertEquals(now.toString(), result.article.updatedAt)
+            assertFalse(result.article.favorited)
+            assertEquals(0, result.article.favoritesCount)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { articlesRepository.updateArticle(articleEntity, updateArticleDto) }
+        }
+
+    @Test
+    fun testUpdateArticleNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "non-existent-article"
+            val updateArticleDto =
+                UpdateArticleDto(
+                    title = "Updated Title",
+                )
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.updateArticle(userId, slug, updateArticleDto)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testUpdateArticleNotAuthor() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val authorId = UUID.randomUUID()
+            val userEntity = mockk<UserEntity>()
+            val slug = "other-author-article"
+            val updateArticleDto =
+                UpdateArticleDto(
+                    title = "Updated Title",
+                )
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+            every { articleEntity.authorId } returns EntityID(authorId, Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.updateArticle(userId, slug, updateArticleDto)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testDeleteArticle() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "article-to-delete"
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+            every { articleEntity.authorId } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coJustRun { articlesRepository.deleteArticle(articleEntity) }
+
+            // When
+            articlesService.deleteArticle(userId, slug)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { articlesRepository.deleteArticle(articleEntity) }
+        }
+
+    @Test
+    fun testDeleteArticleNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "non-existent-article"
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.deleteArticle(userId, slug)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testDeleteArticleNotAuthor() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val authorId = UUID.randomUUID()
+            val userEntity = mockk<UserEntity>()
+            val slug = "other-author-article"
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+            every { articleEntity.authorId } returns EntityID(authorId, Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.deleteArticle(userId, slug)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testFavoriteArticle() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "article-to-favorite"
+
+            val articleId = UUID.randomUUID()
+            val authorId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+            val now = Instant.now()
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+            every { articleEntity.title } returns "Article Title"
+            every { articleEntity.description } returns "Article Description"
+            every { articleEntity.body } returns "Article Body"
+            every { articleEntity.authorId } returns EntityID(authorId, Users)
+            every { articleEntity.createdAt } returns now
+            every { articleEntity.updatedAt } returns now
+
+            // Set up the author entity
+            val authorEntity = mockk<UserEntity>()
+            every { authorEntity.id } returns EntityID(authorId, Users)
+            every { authorEntity.username } returns "authorname"
+            every { authorEntity.bio } returns "Author Bio"
+            every { authorEntity.image } returns "https://example.com/author.jpg"
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coJustRun { favoriteArticlesRepository.favoriteArticle(articleEntity, userEntity) }
+            coEvery { usersRepository.getUserEntityById(EntityID(authorId, Users)) } returns authorEntity
+            coEvery { tagsRepository.getAllTagsByArticle(articleEntity) } returns emptyList()
+            coEvery { favoriteArticlesRepository.getFavoritesCount(articleEntity) } returns 1
+            coEvery { favoriteArticlesRepository.isFavoritedArticle(articleEntity, userEntity) } returns true
+            coEvery { followingsRepository.isFollowing(authorId.toString(), userId) } returns false
+
+            // When
+            val result = articlesService.favoriteArticle(userId, slug)
+
+            // Then
+            assertEquals(slug, result.article.slug)
+            assertEquals("Article Title", result.article.title)
+            assertEquals("Article Description", result.article.description)
+            assertEquals("Article Body", result.article.body)
+            assertEquals(emptyList(), result.article.tagList)
+            assertEquals(now.toString(), result.article.createdAt)
+            assertEquals(now.toString(), result.article.updatedAt)
+            assertTrue(result.article.favorited)
+            assertEquals(1, result.article.favoritesCount)
+            assertEquals("authorname", result.article.author.username)
+            assertEquals("Author Bio", result.article.author.bio)
+            assertEquals("https://example.com/author.jpg", result.article.author.image)
+            assertFalse(result.article.author.following)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { favoriteArticlesRepository.favoriteArticle(articleEntity, userEntity) }
+        }
+
+    @Test
+    fun testFavoriteArticleNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "non-existent-article"
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.favoriteArticle(userId, slug)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testUnfavoriteArticle() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "article-to-unfavorite"
+
+            val articleId = UUID.randomUUID()
+            val authorId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+            val now = Instant.now()
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+            every { articleEntity.title } returns "Article Title"
+            every { articleEntity.description } returns "Article Description"
+            every { articleEntity.body } returns "Article Body"
+            every { articleEntity.authorId } returns EntityID(authorId, Users)
+            every { articleEntity.createdAt } returns now
+            every { articleEntity.updatedAt } returns now
+
+            // Set up the author entity
+            val authorEntity = mockk<UserEntity>()
+            every { authorEntity.id } returns EntityID(authorId, Users)
+            every { authorEntity.username } returns "authorname"
+            every { authorEntity.bio } returns "Author Bio"
+            every { authorEntity.image } returns "https://example.com/author.jpg"
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coJustRun { favoriteArticlesRepository.unfavoriteArticle(articleEntity, userEntity) }
+            coEvery { usersRepository.getUserEntityById(EntityID(authorId, Users)) } returns authorEntity
+            coEvery { tagsRepository.getAllTagsByArticle(articleEntity) } returns emptyList()
+            coEvery { favoriteArticlesRepository.getFavoritesCount(articleEntity) } returns 0
+            coEvery { favoriteArticlesRepository.isFavoritedArticle(articleEntity, userEntity) } returns false
+            coEvery { followingsRepository.isFollowing(authorId.toString(), userId) } returns false
+
+            // When
+            val result = articlesService.unfavoriteArticle(userId, slug)
+
+            // Then
+            assertEquals(slug, result.article.slug)
+            assertEquals("Article Title", result.article.title)
+            assertEquals("Article Description", result.article.description)
+            assertEquals("Article Body", result.article.body)
+            assertEquals(emptyList(), result.article.tagList)
+            assertEquals(now.toString(), result.article.createdAt)
+            assertEquals(now.toString(), result.article.updatedAt)
+            assertFalse(result.article.favorited)
+            assertEquals(0, result.article.favoritesCount)
+            assertEquals("authorname", result.article.author.username)
+            assertEquals("Author Bio", result.article.author.bio)
+            assertEquals("https://example.com/author.jpg", result.article.author.image)
+            assertFalse(result.article.author.following)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { favoriteArticlesRepository.unfavoriteArticle(articleEntity, userEntity) }
+        }
+
+    @Test
+    fun testUnfavoriteArticleNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "non-existent-article"
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.unfavoriteArticle(userId, slug)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
         }
 }
