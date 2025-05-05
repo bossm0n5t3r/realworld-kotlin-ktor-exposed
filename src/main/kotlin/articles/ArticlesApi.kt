@@ -32,6 +32,13 @@ fun Route.articlesApi(articlesService: ArticlesService) {
             call.respond(articlesService.createArticle(userId, createArticleDto.article))
         }
 
+        get("/articles/feed") {
+            val userId = call.userId()
+            val limit = call.parameters["limit"]?.toIntOrNull() ?: 20
+            val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+            call.respond(articlesService.getFeedArticles(userId, limit, offset))
+        }
+
         put("/articles/{slug}") {
             val slug = call.parameters["slug"] ?: error("Invalid request")
             val userId = call.userId()
