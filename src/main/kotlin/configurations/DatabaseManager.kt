@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import me.bossm0n5t3r.articles.Articles
+import me.bossm0n5t3r.articles.Comments
 import me.bossm0n5t3r.articles.FavoriteArticles
 import me.bossm0n5t3r.profiles.Followings
 import me.bossm0n5t3r.tags.ArticleTags
@@ -48,7 +49,7 @@ class DatabaseManagerImpl : DatabaseManager {
             block()
         }
 
-    private val tables = arrayOf(Users, Followings, Articles, FavoriteArticles, Tags, ArticleTags)
+    private val tables = arrayOf(Users, Followings, Articles, FavoriteArticles, Tags, ArticleTags, Comments)
 
     override fun createTables() {
         transaction(this.database) {
