@@ -8,6 +8,8 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import me.bossm0n5t3r.articles.ArticlesService
+import me.bossm0n5t3r.articles.articlesApi
 import me.bossm0n5t3r.profiles.ProfilesService
 import me.bossm0n5t3r.profiles.profilesApi
 import me.bossm0n5t3r.tags.TagsService
@@ -26,6 +28,7 @@ fun Application.configureRouting() {
     val usersService: UsersService by inject()
     val profilesService: ProfilesService by inject()
     val tagsService: TagsService by inject()
+    val articlesService: ArticlesService by inject()
 
     routing {
         get("/") {
@@ -40,6 +43,7 @@ fun Application.configureRouting() {
             usersApi(usersService)
             profilesApi(profilesService)
             tagsApi(tagsService)
+            articlesApi(articlesService)
         }
     }
 }
