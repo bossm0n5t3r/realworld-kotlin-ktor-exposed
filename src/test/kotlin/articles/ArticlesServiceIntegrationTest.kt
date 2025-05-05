@@ -22,6 +22,7 @@ class ArticlesServiceIntegrationTest {
     private val articlesRepository: ArticlesRepository = ArticlesRepository(databaseManager)
     private val favoriteArticlesRepository: FavoriteArticlesRepository = FavoriteArticlesRepository(databaseManager)
     private val tagsRepository: TagsRepository = TagsRepository(databaseManager)
+    private val commentsRepository: CommentsRepository = CommentsRepository(databaseManager)
     private val articlesService: ArticlesService =
         ArticlesService(
             usersRepository,
@@ -29,6 +30,7 @@ class ArticlesServiceIntegrationTest {
             articlesRepository,
             favoriteArticlesRepository,
             tagsRepository,
+            commentsRepository,
         )
 
     private lateinit var user1Id: String
@@ -713,5 +715,150 @@ class ArticlesServiceIntegrationTest {
             // Verify favorites count
             val favoritesCount = favoriteArticlesRepository.getFavoritesCount(article)
             assertEquals(0, favoritesCount)
+        }
+
+    @Test
+    fun testAddComment() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Article For Comment",
+                        description = "Comment Description",
+                        body = "Comment Body",
+                    ),
+                )
+
+            val commentBody = "This is a test comment"
+            val createCommentDto = CreateCommentDto(body = commentBody)
+
+            // When
+            val result = articlesService.addComment(user1Id, article.slug, createCommentDto)
+
+            // Then
+            assertNotNull(result.comment)
+            assertEquals(commentBody, result.comment.body)
+            assertEquals(user1Username, result.comment.author.username)
+
+            // Verify comment exists in the database
+            val comments = commentsRepository.getCommentsForArticle(article)
+            assertEquals(1, comments.size)
+            assertEquals(commentBody, comments.first().body)
+            assertEquals(user1Entity.id, comments.first().userId)
+        }
+
+    @Test
+    fun testGetCommentsForArticle() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+            val user2Entity = usersRepository.getUserEntityById(user2Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Article With Comments",
+                        description = "Comments Description",
+                        body = "Comments Body",
+                    ),
+                )
+
+            // Add comments from both users
+            val comment1Body = "Comment from user1"
+            val comment2Body = "Comment from user2"
+
+            commentsRepository.createComment(user1Entity, article, comment1Body)
+            commentsRepository.createComment(user2Entity, article, comment2Body)
+
+            // When
+            val result = articlesService.getCommentsForArticle(user1Id, article.slug)
+
+            // Then
+            assertEquals(2, result.comments.size)
+            assertTrue(result.comments.any { it.body == comment1Body && it.author.username == user1Username })
+            assertTrue(result.comments.any { it.body == comment2Body && it.author.username == user2Username })
+
+            // Check following relationship
+            val user2Comment = result.comments.find { it.author.username == user2Username }
+            assertNotNull(user2Comment)
+            assertFalse(user2Comment.author.following) // user1 is not following user2 by default
+
+            // Create following relationship and check again
+            followingsRepository.addFollowing(user2Id, user1Id)
+            val resultAfterFollow = articlesService.getCommentsForArticle(user1Id, article.slug)
+            val user2CommentAfterFollow = resultAfterFollow.comments.find { it.author.username == user2Username }
+            assertNotNull(user2CommentAfterFollow)
+            assertTrue(user2CommentAfterFollow.author.following) // Now user1 should be following user2
+        }
+
+    @Test
+    fun testDeleteComment() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Article For Comment Deletion",
+                        description = "Comment Deletion Description",
+                        body = "Comment Deletion Body",
+                    ),
+                )
+
+            // Add a comment
+            val commentBody = "Comment to be deleted"
+            val commentEntity = commentsRepository.createComment(user1Entity, article, commentBody)
+
+            // Verify comment exists
+            val commentsBeforeDeletion = commentsRepository.getCommentsForArticle(article)
+            assertEquals(1, commentsBeforeDeletion.size)
+
+            // When
+            articlesService.deleteComment(user1Id, article.slug, commentEntity.id.value)
+
+            // Then
+            val commentsAfterDeletion = commentsRepository.getCommentsForArticle(article)
+            assertTrue(commentsAfterDeletion.isEmpty())
+        }
+
+    @Test
+    fun testDeleteCommentNotAuthor() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+
+            // Create an article by user1
+            val article =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "Article For Comment Auth Test",
+                        description = "Comment Auth Description",
+                        body = "Comment Auth Body",
+                    ),
+                )
+
+            // Add a comment by user1
+            val commentBody = "User1's comment"
+            val commentEntity = commentsRepository.createComment(user1Entity, article, commentBody)
+
+            // When/Then - User2 tries to delete User1's comment
+            assertFailsWith<IllegalStateException> {
+                articlesService.deleteComment(user2Id, article.slug, commentEntity.id.value)
+            }
+
+            // Verify comment was not deleted
+            val commentsAfterAttempt = commentsRepository.getCommentsForArticle(article)
+            assertEquals(1, commentsAfterAttempt.size)
         }
 }
