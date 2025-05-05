@@ -38,7 +38,7 @@ class ArticlesService(
 
     private suspend fun getArticleDto(
         articleEntity: ArticleEntity,
-        currentUser: UserEntity?,
+        currentUser: UserEntity? = null,
     ): ArticleDto {
         val author = usersRepository.getUserEntityById(articleEntity.authorId)
         val articleTags = tagsRepository.getAllTagsByArticle(articleEntity).map { it.tagName }
@@ -59,5 +59,65 @@ class ArticlesService(
             favoritesCount = favoritesCount,
             author = authorProfile,
         )
+    }
+
+    suspend fun getArticleBySlug(slug: String): ArticleWrapper<ArticleDto> {
+        val article = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        return ArticleWrapper(getArticleDto(article))
+    }
+
+    suspend fun createArticle(
+        userId: String,
+        createArticleDto: CreateArticleDto,
+    ): ArticleWrapper<ArticleDto> {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val articleEntity = articlesRepository.createArticle(userEntity, createArticleDto)
+        for (tagName in createArticleDto.tagList) {
+            val tag = tagsRepository.getOrCreateTag(tagName)
+            tagsRepository.createArticleTagEntity(articleEntity, tag)
+        }
+        return ArticleWrapper(getArticleDto(articleEntity, userEntity))
+    }
+
+    suspend fun updateArticle(
+        userId: String,
+        slug: String,
+        updateArticleDto: UpdateArticleDto,
+    ): ArticleWrapper<ArticleDto> {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        if (articleEntity.authorId != userEntity.id) error("Cannot update article: not the author")
+        val updatedArticle = articlesRepository.updateArticle(articleEntity, updateArticleDto)
+        return ArticleWrapper(getArticleDto(updatedArticle, userEntity))
+    }
+
+    suspend fun deleteArticle(
+        userId: String,
+        slug: String,
+    ) {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        if (articleEntity.authorId != userEntity.id) error("Cannot delete article: not the author")
+        articlesRepository.deleteArticle(articleEntity)
+    }
+
+    suspend fun favoriteArticle(
+        userId: String,
+        slug: String,
+    ): ArticleWrapper<ArticleDto> {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        favoriteArticlesRepository.favoriteArticle(articleEntity, userEntity)
+        return ArticleWrapper(getArticleDto(articleEntity, userEntity))
+    }
+
+    suspend fun unfavoriteArticle(
+        userId: String,
+        slug: String,
+    ): ArticleWrapper<ArticleDto> {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        favoriteArticlesRepository.unfavoriteArticle(articleEntity, userEntity)
+        return ArticleWrapper(getArticleDto(articleEntity, userEntity))
     }
 }
