@@ -91,16 +91,16 @@ class FollowingsRepositoryTest {
                     ?.toString() ?: error("User not found")
 
             // user1 follows user2 and user3
-            followingsRepository.addFollowing(user1Id, user2Id)
-            followingsRepository.addFollowing(user1Id, user3Id)
+            followingsRepository.addFollowing(user2Id, user1Id)
+            followingsRepository.addFollowing(user3Id, user1Id)
 
             // When
             val followings = followingsRepository.getAllFollowingsByUserId(user1Id)
 
             // Then
             assertEquals(2, followings.size)
-            assertTrue(followings.any { it.followerId.toString() == user2Id })
-            assertTrue(followings.any { it.followerId.toString() == user3Id })
+            assertTrue(followings.any { it.userId.toString() == user2Id })
+            assertTrue(followings.any { it.userId.toString() == user3Id })
         }
 
     @Test

@@ -9,7 +9,7 @@ class FollowingsRepository(
 ) {
     suspend fun getAllFollowingsByUserId(userId: String) =
         databaseManager.dbQuery {
-            FollowingEntity.find { Followings.userId eq UUID.fromString(userId) }.toList()
+            FollowingEntity.find { Followings.followerId eq UUID.fromString(userId) }.toList()
         }
 
     suspend fun isFollowing(
