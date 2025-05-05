@@ -336,4 +336,86 @@ class ArticlesRepositoryTest {
             val articleAfterDeletion = articlesRepository.getArticleBySlug(slug)
             assertNull(articleAfterDeletion, "Article should be null after deletion")
         }
+
+    @Test
+    fun testGetAllArticles_WithAuthorsList() =
+        runBlocking {
+            // Given
+            // Create articles by first user
+            repeat(3) { index ->
+                val createArticleDto =
+                    CreateArticleDto(
+                        title = "User1 Article $index",
+                        description = "Description $index",
+                        body = "Body $index",
+                    )
+                articlesRepository.createArticle(userEntity, createArticleDto)
+            }
+
+            // Create articles by second user
+            repeat(2) { index ->
+                val createArticleDto =
+                    CreateArticleDto(
+                        title = "User2 Article $index",
+                        description = "Description $index",
+                        body = "Body $index",
+                    )
+                articlesRepository.createArticle(anotherUserEntity, createArticleDto)
+            }
+
+            // Create a third user and articles
+            val thirdUserEntity =
+                usersRepository
+                    .createUser("third", "third@example.com", "password", "salt")
+                    .let { usersRepository.findUserEntityByEmail("third@example.com")!! }
+
+            repeat(2) { index ->
+                val createArticleDto =
+                    CreateArticleDto(
+                        title = "User3 Article $index",
+                        description = "Description $index",
+                        body = "Body $index",
+                    )
+                articlesRepository.createArticle(thirdUserEntity, createArticleDto)
+            }
+
+            // When - Get articles by first and third user
+            val authorsList = listOf(userEntity, thirdUserEntity)
+            val retrievedArticles = articlesRepository.getAllArticles(authors = authorsList, limit = 10, offset = 0)
+
+            // Then
+            assertEquals(5, retrievedArticles.size) // 3 from first user + 2 from third user
+            retrievedArticles.forEach { article ->
+                assert(article.authorId == userEntity.id || article.authorId == thirdUserEntity.id) {
+                    "Article author ID ${article.authorId} should be either ${userEntity.id} or ${thirdUserEntity.id}"
+                }
+            }
+
+            // Test with pagination
+            val paginatedArticles = articlesRepository.getAllArticles(authors = authorsList, limit = 2, offset = 0)
+            assertEquals(2, paginatedArticles.size)
+
+            val secondPageArticles = articlesRepository.getAllArticles(authors = authorsList, limit = 2, offset = 2)
+            assertEquals(2, secondPageArticles.size)
+
+            // Ensure first and second page articles are different
+            val firstPageIds = paginatedArticles.map { it.id.value }
+            val secondPageIds = secondPageArticles.map { it.id.value }
+            assertEquals(
+                0,
+                firstPageIds.intersect(secondPageIds).size,
+                "First and second page should not have same article IDs: $firstPageIds, $secondPageIds",
+            )
+
+            // Verify articles are ordered by createdAt in descending order
+            for (i in 0 until retrievedArticles.size - 1) {
+                val currentArticle = retrievedArticles[i]
+                val nextArticle = retrievedArticles[i + 1]
+                assert(currentArticle.createdAt >= nextArticle.createdAt) {
+                    "Articles are not ordered by createdAt in descending order. " +
+                        "Article at index $i (created at ${currentArticle.createdAt}) " +
+                        "should be created after article at index ${i + 1} (created at ${nextArticle.createdAt})"
+                }
+            }
+        }
 }
