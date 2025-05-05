@@ -23,6 +23,22 @@ class ArticlesRepository(
             .toList()
     }
 
+    suspend fun getAllArticles(
+        authors: List<UserEntity>,
+        limit: Int,
+        offset: Int,
+    ): List<ArticleEntity> {
+        val authorIds = authors.map { it.id.value }
+        return databaseManager.dbQuery {
+            ArticleEntity
+                .find { Articles.authorId inList authorIds }
+                .orderBy(Articles.createdAt to SortOrder.DESC)
+                .offset(offset.toLong())
+                .limit(limit)
+                .toList()
+        }
+    }
+
     suspend fun createArticle(
         author: UserEntity,
         createArticleDto: CreateArticleDto,
