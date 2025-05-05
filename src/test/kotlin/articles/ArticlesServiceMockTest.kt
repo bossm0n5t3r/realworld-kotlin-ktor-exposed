@@ -27,6 +27,7 @@ class ArticlesServiceMockTest {
     private val articlesRepository: ArticlesRepository = mockk(relaxed = true)
     private val favoriteArticlesRepository: FavoriteArticlesRepository = mockk(relaxed = true)
     private val tagsRepository: TagsRepository = mockk(relaxed = true)
+    private val commentsRepository: CommentsRepository = mockk(relaxed = true)
     private val articlesService: ArticlesService =
         ArticlesService(
             usersRepository,
@@ -34,6 +35,7 @@ class ArticlesServiceMockTest {
             articlesRepository,
             favoriteArticlesRepository,
             tagsRepository,
+            commentsRepository,
         )
 
     @Test
@@ -925,5 +927,428 @@ class ArticlesServiceMockTest {
             // Verify repository calls
             coVerify { usersRepository.getUserEntityById(userId) }
             coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testAddComment() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "test-article"
+            val createCommentDto = CreateCommentDto(body = "Test comment body")
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+            val commentId = 1L
+            val commentEntity = mockk<CommentEntity>()
+            val now = Instant.now()
+
+            // Set up the user entity properties
+            val userUUID = UUID.fromString(userId)
+            every { userEntity.id } returns EntityID(userUUID, Users)
+            every { userEntity.username } returns "testuser"
+            every { userEntity.bio } returns "Test Bio"
+            every { userEntity.image } returns "https://example.com/testuser.jpg"
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+
+            // Set up the comment entity properties
+            every { commentEntity.id } returns EntityID(commentId, Comments)
+            every { commentEntity.createdAt } returns now
+            every { commentEntity.updatedAt } returns now
+            every { commentEntity.body } returns createCommentDto.body
+            every { commentEntity.userId } returns EntityID(userUUID, Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { usersRepository.getUserEntityById(EntityID(userUUID, Users)) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { commentsRepository.createComment(userEntity, articleEntity, createCommentDto.body) } returns commentEntity
+            coEvery { followingsRepository.isFollowing(userUUID.toString(), userUUID.toString()) } returns false
+
+            // When
+            val result = articlesService.addComment(userId, slug, createCommentDto)
+
+            // Then
+            assertEquals(commentId, result.comment.id)
+            assertEquals(now.toString(), result.comment.createdAt)
+            assertEquals(now.toString(), result.comment.updatedAt)
+            assertEquals(createCommentDto.body, result.comment.body)
+            assertEquals("testuser", result.comment.author.username)
+            assertEquals("Test Bio", result.comment.author.bio)
+            assertEquals("https://example.com/testuser.jpg", result.comment.author.image)
+            assertFalse(result.comment.author.following)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { commentsRepository.createComment(userEntity, articleEntity, createCommentDto.body) }
+        }
+
+    @Test
+    fun testAddCommentArticleNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "non-existent-article"
+            val createCommentDto = CreateCommentDto(body = "Test comment body")
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.addComment(userId, slug, createCommentDto)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testGetCommentsForArticle() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "test-article"
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            val commentId1 = 1L
+            val commentId2 = 2L
+            val commentEntity1 = mockk<CommentEntity>()
+            val commentEntity2 = mockk<CommentEntity>()
+            val now = Instant.now()
+
+            val commentAuthorId1 = UUID.randomUUID()
+            val commentAuthorId2 = UUID.randomUUID()
+            val commentAuthorEntity1 = mockk<UserEntity>()
+            val commentAuthorEntity2 = mockk<UserEntity>()
+
+            // Set up the user entity properties
+            val userUUID = UUID.fromString(userId)
+            val userEntityId = mockk<EntityID<UUID>>()
+            every { userEntity.id } returns userEntityId
+            every { userEntityId.value } returns userUUID
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+
+            // Set up the comment entities properties
+            every { commentEntity1.id } returns EntityID(commentId1, Comments)
+            every { commentEntity1.createdAt } returns now
+            every { commentEntity1.updatedAt } returns now
+            every { commentEntity1.body } returns "Comment 1 body"
+            every { commentEntity1.userId } returns EntityID(commentAuthorId1, Users)
+
+            every { commentEntity2.id } returns EntityID(commentId2, Comments)
+            every { commentEntity2.createdAt } returns now
+            every { commentEntity2.updatedAt } returns now
+            every { commentEntity2.body } returns "Comment 2 body"
+            every { commentEntity2.userId } returns EntityID(commentAuthorId2, Users)
+
+            // Set up the comment author entities
+            every { commentAuthorEntity1.id } returns EntityID(commentAuthorId1, Users)
+            every { commentAuthorEntity1.username } returns "commentauthor1"
+            every { commentAuthorEntity1.bio } returns "Comment Author 1 Bio"
+            every { commentAuthorEntity1.image } returns "https://example.com/commentauthor1.jpg"
+
+            every { commentAuthorEntity2.id } returns EntityID(commentAuthorId2, Users)
+            every { commentAuthorEntity2.username } returns "commentauthor2"
+            every { commentAuthorEntity2.bio } returns "Comment Author 2 Bio"
+            every { commentAuthorEntity2.image } returns "https://example.com/commentauthor2.jpg"
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { commentsRepository.getCommentsForArticle(articleEntity) } returns listOf(commentEntity1, commentEntity2)
+            coEvery { usersRepository.getUserEntityById(EntityID(commentAuthorId1, Users)) } returns commentAuthorEntity1
+            coEvery { usersRepository.getUserEntityById(EntityID(commentAuthorId2, Users)) } returns commentAuthorEntity2
+            coEvery { followingsRepository.isFollowing(commentAuthorId1.toString(), userId) } returns true
+            coEvery { followingsRepository.isFollowing(commentAuthorId2.toString(), userId) } returns false
+
+            // When
+            val result = articlesService.getCommentsForArticle(userId, slug)
+
+            // Then
+            assertEquals(2, result.comments.size)
+
+            // Verify first comment
+            assertEquals(commentId1, result.comments[0].id)
+            assertEquals(now.toString(), result.comments[0].createdAt)
+            assertEquals(now.toString(), result.comments[0].updatedAt)
+            assertEquals("Comment 1 body", result.comments[0].body)
+            assertEquals("commentauthor1", result.comments[0].author.username)
+            assertEquals("Comment Author 1 Bio", result.comments[0].author.bio)
+            assertEquals("https://example.com/commentauthor1.jpg", result.comments[0].author.image)
+            assertTrue(result.comments[0].author.following)
+
+            // Verify second comment
+            assertEquals(commentId2, result.comments[1].id)
+            assertEquals(now.toString(), result.comments[1].createdAt)
+            assertEquals(now.toString(), result.comments[1].updatedAt)
+            assertEquals("Comment 2 body", result.comments[1].body)
+            assertEquals("commentauthor2", result.comments[1].author.username)
+            assertEquals("Comment Author 2 Bio", result.comments[1].author.bio)
+            assertEquals("https://example.com/commentauthor2.jpg", result.comments[1].author.image)
+            assertFalse(result.comments[1].author.following)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { commentsRepository.getCommentsForArticle(articleEntity) }
+            coVerify { usersRepository.getUserEntityById(EntityID(commentAuthorId1, Users)) }
+            coVerify { usersRepository.getUserEntityById(EntityID(commentAuthorId2, Users)) }
+            coVerify { followingsRepository.isFollowing(commentAuthorId1.toString(), userId) }
+            coVerify { followingsRepository.isFollowing(commentAuthorId2.toString(), userId) }
+        }
+
+    @Test
+    fun testGetCommentsForArticleWithoutUser() =
+        runBlocking {
+            // Given
+            val slug = "test-article"
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            val commentId = 1L
+            val commentEntity = mockk<CommentEntity>()
+            val now = Instant.now()
+
+            val commentAuthorId = UUID.randomUUID()
+            val commentAuthorEntity = mockk<UserEntity>()
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+
+            // Set up the comment entity properties
+            every { commentEntity.id } returns EntityID(commentId, Comments)
+            every { commentEntity.createdAt } returns now
+            every { commentEntity.updatedAt } returns now
+            every { commentEntity.body } returns "Comment body"
+            every { commentEntity.userId } returns EntityID(commentAuthorId, Users)
+
+            // Set up the comment author entity
+            every { commentAuthorEntity.id } returns EntityID(commentAuthorId, Users)
+            every { commentAuthorEntity.username } returns "commentauthor"
+            every { commentAuthorEntity.bio } returns "Comment Author Bio"
+            every { commentAuthorEntity.image } returns "https://example.com/commentauthor.jpg"
+
+            // Mock repository methods
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { commentsRepository.getCommentsForArticle(articleEntity) } returns listOf(commentEntity)
+            coEvery { usersRepository.getUserEntityById(EntityID(commentAuthorId, Users)) } returns commentAuthorEntity
+            coEvery { followingsRepository.isFollowing(any(), any()) } returns false
+
+            // When
+            val result = articlesService.getCommentsForArticle(null, slug)
+
+            // Then
+            assertEquals(1, result.comments.size)
+            assertEquals(commentId, result.comments[0].id)
+            assertEquals(now.toString(), result.comments[0].createdAt)
+            assertEquals(now.toString(), result.comments[0].updatedAt)
+            assertEquals("Comment body", result.comments[0].body)
+            assertEquals("commentauthor", result.comments[0].author.username)
+            assertEquals("Comment Author Bio", result.comments[0].author.bio)
+            assertEquals("https://example.com/commentauthor.jpg", result.comments[0].author.image)
+            assertFalse(result.comments[0].author.following)
+
+            // Verify repository calls
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { commentsRepository.getCommentsForArticle(articleEntity) }
+            coVerify { usersRepository.getUserEntityById(EntityID(commentAuthorId, Users)) }
+        }
+
+    @Test
+    fun testGetCommentsForArticleNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "non-existent-article"
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.getCommentsForArticle(userId, slug)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testDeleteComment() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "test-article"
+            val commentId = 1L
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            val commentEntity = mockk<CommentEntity>()
+
+            // Set up the user entity properties
+            val userUUID = UUID.fromString(userId)
+            val userEntityId = mockk<EntityID<UUID>>()
+            every { userEntity.id } returns userEntityId
+            every { userEntityId.value } returns userUUID
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+
+            // Set up the comment entity properties
+            every { commentEntity.id } returns EntityID(commentId, Comments)
+            every { commentEntity.userId } returns userEntityId
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { commentsRepository.getCommentsForArticle(articleEntity) } returns listOf(commentEntity)
+            coJustRun { commentsRepository.deleteComment(commentEntity) }
+
+            // When
+            articlesService.deleteComment(userId, slug, commentId)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { commentsRepository.getCommentsForArticle(articleEntity) }
+            coVerify { commentsRepository.deleteComment(commentEntity) }
+        }
+
+    @Test
+    fun testDeleteCommentArticleNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "non-existent-article"
+            val commentId = 1L
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns null
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.deleteComment(userId, slug, commentId)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+        }
+
+    @Test
+    fun testDeleteCommentNotFound() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val slug = "test-article"
+            val commentId = 999L
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            val existingCommentId = 1L
+            val existingCommentEntity = mockk<CommentEntity>()
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+
+            // Set up the existing comment entity properties
+            every { existingCommentEntity.id } returns EntityID(existingCommentId, Comments)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { commentsRepository.getCommentsForArticle(articleEntity) } returns listOf(existingCommentEntity)
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.deleteComment(userId, slug, commentId)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { commentsRepository.getCommentsForArticle(articleEntity) }
+        }
+
+    @Test
+    fun testDeleteCommentNotAuthor() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val commentAuthorId = UUID.randomUUID()
+            val slug = "test-article"
+            val commentId = 1L
+
+            val articleId = UUID.randomUUID()
+            val articleEntity = mockk<ArticleEntity>()
+
+            val commentEntity = mockk<CommentEntity>()
+
+            // Set up the user entity properties
+            every { userEntity.id } returns EntityID(UUID.fromString(userId), Users)
+
+            // Set up the article entity properties
+            every { articleEntity.id } returns EntityID(articleId, Articles)
+            every { articleEntity.slug } returns slug
+
+            // Set up the comment entity properties
+            every { commentEntity.id } returns EntityID(commentId, Comments)
+            every { commentEntity.userId } returns EntityID(commentAuthorId, Users)
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { articlesRepository.getArticleBySlug(slug) } returns articleEntity
+            coEvery { commentsRepository.getCommentsForArticle(articleEntity) } returns listOf(commentEntity)
+
+            // When/Then
+            assertFailsWith<IllegalStateException> {
+                articlesService.deleteComment(userId, slug, commentId)
+            }
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { articlesRepository.getArticleBySlug(slug) }
+            coVerify { commentsRepository.getCommentsForArticle(articleEntity) }
         }
 }
