@@ -62,6 +62,23 @@ class ArticlesService(
         )
     }
 
+    suspend fun getFeedArticles(
+        userId: String,
+        limit: Int,
+        offset: Int,
+    ): ArticlesWrapper<ArticleDto> {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val followingUsers =
+            followingsRepository
+                .getAllFollowingsByUserId(userEntity.id.value.toString())
+                .map { usersRepository.getUserEntityById(it.userId.toString()) }
+        val articles =
+            articlesRepository
+                .getAllArticles(followingUsers, limit, offset)
+                .map { getArticleDto(it, userEntity) }
+        return ArticlesWrapper(articles, articles.count())
+    }
+
     suspend fun getArticleBySlug(slug: String): ArticleWrapper<ArticleDto> {
         val article = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
         return ArticleWrapper(getArticleDto(article))

@@ -861,4 +861,90 @@ class ArticlesServiceIntegrationTest {
             val commentsAfterAttempt = commentsRepository.getCommentsForArticle(article)
             assertEquals(1, commentsAfterAttempt.size)
         }
+
+    @Test
+    fun testGetFeedArticles() =
+        runBlocking {
+            // Given
+            val user1Entity = usersRepository.getUserEntityById(user1Id)
+            val user2Entity = usersRepository.getUserEntityById(user2Id)
+
+            // User1 follows user2
+            followingsRepository.addFollowing(user2Id, user1Id)
+
+            // Create articles for user1 (not followed)
+            val article1 =
+                articlesRepository.createArticle(
+                    user1Entity,
+                    CreateArticleDto(
+                        title = "User1 Article",
+                        description = "User1 Description",
+                        body = "User1 Body",
+                        tagList = listOf("tag1"),
+                    ),
+                )
+
+            // Create articles for user2 (followed by user1)
+            val article2 =
+                articlesRepository.createArticle(
+                    user2Entity,
+                    CreateArticleDto(
+                        title = "User2 Article 1",
+                        description = "User2 Description 1",
+                        body = "User2 Body 1",
+                        tagList = listOf("tag2"),
+                    ),
+                )
+
+            val article3 =
+                articlesRepository.createArticle(
+                    user2Entity,
+                    CreateArticleDto(
+                        title = "User2 Article 2",
+                        description = "User2 Description 2",
+                        body = "User2 Body 2",
+                        tagList = listOf("tag3"),
+                    ),
+                )
+
+            // Add tags to articles
+            val tag1 = tagsRepository.getOrCreateTag("tag1")
+            val tag2 = tagsRepository.getOrCreateTag("tag2")
+            val tag3 = tagsRepository.getOrCreateTag("tag3")
+
+            tagsRepository.createArticleTagEntity(article1, tag1)
+            tagsRepository.createArticleTagEntity(article2, tag2)
+            tagsRepository.createArticleTagEntity(article3, tag3)
+
+            // When - Get feed articles for user1
+            val result = articlesService.getFeedArticles(user1Id, 20, 0)
+
+            // Then
+            assertEquals(2, result.articlesCount)
+            assertEquals(2, result.articles.size)
+
+            // All articles should be from user2 (followed by user1)
+            result.articles.forEach { article ->
+                assertEquals(user2Username, article.author.username)
+                assertTrue(article.author.following)
+            }
+
+            // Verify specific articles
+            val articleSlugs = result.articles.map { it.slug }
+            assertTrue(articleSlugs.contains(article2.slug))
+            assertTrue(articleSlugs.contains(article3.slug))
+            assertFalse(articleSlugs.contains(article1.slug))
+
+            // Test with limit and offset
+            val resultWithLimit = articlesService.getFeedArticles(user1Id, 1, 0)
+            assertEquals(1, resultWithLimit.articlesCount)
+            assertEquals(1, resultWithLimit.articles.size)
+
+            val resultWithOffset = articlesService.getFeedArticles(user1Id, 1, 1)
+            assertEquals(1, resultWithOffset.articlesCount)
+            assertEquals(1, resultWithOffset.articles.size)
+
+            // Verify different articles are returned with offset
+            assertFalse(resultWithLimit.articles[0].slug == resultWithOffset.articles[0].slug)
+        }
 }

@@ -6,6 +6,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import me.bossm0n5t3r.profiles.FollowingEntity
 import me.bossm0n5t3r.profiles.FollowingsRepository
 import me.bossm0n5t3r.tags.TagEntity
 import me.bossm0n5t3r.tags.TagsRepository
@@ -19,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class ArticlesServiceMockTest {
@@ -1350,5 +1352,135 @@ class ArticlesServiceMockTest {
             coVerify { usersRepository.getUserEntityById(userId) }
             coVerify { articlesRepository.getArticleBySlug(slug) }
             coVerify { commentsRepository.getCommentsForArticle(articleEntity) }
+        }
+
+    @Test
+    fun testGetFeedArticles() =
+        runBlocking {
+            // Given
+            val userId = UUID.randomUUID().toString()
+            val userEntity = mockk<UserEntity>()
+            val limit = 20
+            val offset = 0
+
+            val userUUID = UUID.fromString(userId)
+            val userEntityId = mockk<EntityID<UUID>>()
+            every { userEntity.id } returns userEntityId
+            every { userEntityId.value } returns userUUID
+
+            // Set up following users
+            val followingUser1Id = UUID.randomUUID()
+            val followingUser2Id = UUID.randomUUID()
+            val followingEntity1 = mockk<FollowingEntity>()
+            val followingEntity2 = mockk<FollowingEntity>()
+
+            every { followingEntity1.userId } returns followingUser1Id
+            every { followingEntity2.userId } returns followingUser2Id
+
+            val followingUser1 = mockk<UserEntity>()
+            val followingUser2 = mockk<UserEntity>()
+
+            every { followingUser1.id } returns EntityID(followingUser1Id, Users)
+            every { followingUser2.id } returns EntityID(followingUser2Id, Users)
+            every { followingUser1.username } returns "followinguser1"
+            every { followingUser2.username } returns "followinguser2"
+            every { followingUser1.bio } returns "Following User 1 Bio"
+            every { followingUser2.bio } returns "Following User 2 Bio"
+            every { followingUser1.image } returns "https://example.com/followinguser1.jpg"
+            every { followingUser2.image } returns "https://example.com/followinguser2.jpg"
+
+            // Set up articles
+            val article1Id = UUID.randomUUID()
+            val article2Id = UUID.randomUUID()
+            val articleEntity1 = mockk<ArticleEntity>()
+            val articleEntity2 = mockk<ArticleEntity>()
+            val now = Instant.now()
+
+            // Set up article1 properties
+            every { articleEntity1.id } returns EntityID(article1Id, Articles)
+            every { articleEntity1.slug } returns "following-user1-article"
+            every { articleEntity1.title } returns "Following User 1 Article"
+            every { articleEntity1.description } returns "Following User 1 Description"
+            every { articleEntity1.body } returns "Following User 1 Body"
+            every { articleEntity1.authorId } returns EntityID(followingUser1Id, Users)
+            every { articleEntity1.createdAt } returns now
+            every { articleEntity1.updatedAt } returns now
+
+            // Set up article2 properties
+            every { articleEntity2.id } returns EntityID(article2Id, Articles)
+            every { articleEntity2.slug } returns "following-user2-article"
+            every { articleEntity2.title } returns "Following User 2 Article"
+            every { articleEntity2.description } returns "Following User 2 Description"
+            every { articleEntity2.body } returns "Following User 2 Body"
+            every { articleEntity2.authorId } returns EntityID(followingUser2Id, Users)
+            every { articleEntity2.createdAt } returns now
+            every { articleEntity2.updatedAt } returns now
+
+            // Mock repository methods
+            coEvery { usersRepository.getUserEntityById(userId) } returns userEntity
+            coEvery { followingsRepository.getAllFollowingsByUserId(userUUID.toString()) } returns
+                listOf(followingEntity1, followingEntity2)
+            coEvery { usersRepository.getUserEntityById(followingUser1Id.toString()) } returns followingUser1
+            coEvery { usersRepository.getUserEntityById(followingUser2Id.toString()) } returns followingUser2
+            coEvery { articlesRepository.getAllArticles(listOf(followingUser1, followingUser2), limit, offset) } returns
+                listOf(articleEntity1, articleEntity2)
+
+            // Mock methods for getArticleDto
+            coEvery { usersRepository.getUserEntityById(EntityID(followingUser1Id, Users)) } returns followingUser1
+            coEvery { usersRepository.getUserEntityById(EntityID(followingUser2Id, Users)) } returns followingUser2
+            coEvery { tagsRepository.getAllTagsByArticle(articleEntity1) } returns emptyList()
+            coEvery { tagsRepository.getAllTagsByArticle(articleEntity2) } returns emptyList()
+            coEvery { favoriteArticlesRepository.getFavoritesCount(articleEntity1) } returns 0
+            coEvery { favoriteArticlesRepository.getFavoritesCount(articleEntity2) } returns 0
+            coEvery { favoriteArticlesRepository.isFavoritedArticle(articleEntity1, userEntity) } returns false
+            coEvery { favoriteArticlesRepository.isFavoritedArticle(articleEntity2, userEntity) } returns false
+            coEvery { followingsRepository.isFollowing(followingUser1Id.toString(), userUUID.toString()) } returns true
+            coEvery { followingsRepository.isFollowing(followingUser2Id.toString(), userUUID.toString()) } returns true
+
+            // When
+            val result = articlesService.getFeedArticles(userId, limit, offset)
+
+            // Then
+            assertEquals(2, result.articlesCount)
+            assertEquals(2, result.articles.size)
+
+            // Verify first article
+            val article1 = result.articles.find { it.slug == "following-user1-article" }
+            assertNotNull(article1)
+            assertEquals("Following User 1 Article", article1!!.title)
+            assertEquals("Following User 1 Description", article1.description)
+            assertEquals("Following User 1 Body", article1.body)
+            assertEquals(emptyList(), article1.tagList)
+            assertEquals(now.toString(), article1.createdAt)
+            assertEquals(now.toString(), article1.updatedAt)
+            assertFalse(article1.favorited)
+            assertEquals(0, article1.favoritesCount)
+            assertEquals("followinguser1", article1.author.username)
+            assertEquals("Following User 1 Bio", article1.author.bio)
+            assertEquals("https://example.com/followinguser1.jpg", article1.author.image)
+            assertTrue(article1.author.following)
+
+            // Verify second article
+            val article2 = result.articles.find { it.slug == "following-user2-article" }
+            assertNotNull(article2)
+            assertEquals("Following User 2 Article", article2!!.title)
+            assertEquals("Following User 2 Description", article2.description)
+            assertEquals("Following User 2 Body", article2.body)
+            assertEquals(emptyList(), article2.tagList)
+            assertEquals(now.toString(), article2.createdAt)
+            assertEquals(now.toString(), article2.updatedAt)
+            assertFalse(article2.favorited)
+            assertEquals(0, article2.favoritesCount)
+            assertEquals("followinguser2", article2.author.username)
+            assertEquals("Following User 2 Bio", article2.author.bio)
+            assertEquals("https://example.com/followinguser2.jpg", article2.author.image)
+            assertTrue(article2.author.following)
+
+            // Verify repository calls
+            coVerify { usersRepository.getUserEntityById(userId) }
+            coVerify { followingsRepository.getAllFollowingsByUserId(userUUID.toString()) }
+            coVerify { usersRepository.getUserEntityById(followingUser1Id.toString()) }
+            coVerify { usersRepository.getUserEntityById(followingUser2Id.toString()) }
+            coVerify { articlesRepository.getAllArticles(listOf(followingUser1, followingUser2), limit, offset) }
         }
 }
