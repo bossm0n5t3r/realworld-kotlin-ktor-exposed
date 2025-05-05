@@ -12,6 +12,7 @@ class ArticlesService(
     private val articlesRepository: ArticlesRepository,
     private val favoriteArticlesRepository: FavoriteArticlesRepository,
     private val tagsRepository: TagsRepository,
+    private val commentsRepository: CommentsRepository,
 ) {
     suspend fun getAllArticles(
         userId: String?,
@@ -119,5 +120,56 @@ class ArticlesService(
         val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
         favoriteArticlesRepository.unfavoriteArticle(articleEntity, userEntity)
         return ArticleWrapper(getArticleDto(articleEntity, userEntity))
+    }
+
+    suspend fun addComment(
+        userId: String,
+        slug: String,
+        createCommentDto: CreateCommentDto,
+    ): CommentWrapper<CommentDto> {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        val commentEntity = commentsRepository.createComment(userEntity, articleEntity, createCommentDto.body)
+        return CommentWrapper(getCommentDto(commentEntity, userEntity))
+    }
+
+    private suspend fun getCommentDto(
+        commentEntity: CommentEntity,
+        currentUser: UserEntity? = null,
+    ): CommentDto {
+        val commentAuthor = usersRepository.getUserEntityById(commentEntity.userId)
+        val following =
+            currentUser?.let { followingsRepository.isFollowing(commentAuthor.id.value.toString(), it.id.value.toString()) } ?: false
+        val commentAuthorProfile = ProfileDto(commentAuthor, following)
+        return CommentDto(commentEntity, commentAuthorProfile)
+    }
+
+    suspend fun getCommentsForArticle(
+        userId: String? = null,
+        slug: String,
+    ): CommentsWrapper<CommentDto> {
+        val userEntity = userId?.let { usersRepository.getUserEntityById(it) }
+        val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        val comments =
+            commentsRepository
+                .getCommentsForArticle(articleEntity)
+                .map { getCommentDto(it, userEntity) }
+        return CommentsWrapper(comments)
+    }
+
+    suspend fun deleteComment(
+        userId: String,
+        slug: String,
+        commentId: Long,
+    ) {
+        val userEntity = usersRepository.getUserEntityById(userId)
+        val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
+        val commentEntity =
+            commentsRepository
+                .getCommentsForArticle(articleEntity)
+                .find { it.id.value == commentId }
+                ?: error("Comment not found")
+        if (commentEntity.userId != userEntity.id) error("Cannot delete comment: not the author")
+        commentsRepository.deleteComment(commentEntity)
     }
 }
