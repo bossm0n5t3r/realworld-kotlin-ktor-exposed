@@ -18,9 +18,15 @@ fun Route.articlesApi(articlesService: ArticlesService) {
             val articleFilterDto = ArticleFilterDto(call.parameters)
             call.respond(articlesService.getAllArticles(userId, articleFilterDto))
         }
+
+        get("/articles/{slug}/comments") {
+            val userId = call.userIdOrNull()
+            val slug = call.parameters["slug"] ?: error("Invalid request")
+            call.respond(articlesService.getCommentsForArticle(userId, slug))
+        }
     }
 
-    get("/article/{slug}") {
+    get("/articles/{slug}") {
         val slug = call.parameters["slug"] ?: error("Invalid request")
         call.respond(articlesService.getArticleBySlug(slug))
     }
@@ -43,25 +49,39 @@ fun Route.articlesApi(articlesService: ArticlesService) {
             val slug = call.parameters["slug"] ?: error("Invalid request")
             val userId = call.userId()
             val updateArticleDto = call.receive<ArticleWrapper<UpdateArticleDto>>()
-            call.respond(articlesService.updateArticle(slug, userId, updateArticleDto.article))
+            call.respond(articlesService.updateArticle(userId, slug, updateArticleDto.article))
         }
 
         delete("/articles/{slug}") {
             val slug = call.parameters["slug"] ?: error("Invalid request")
             val userId = call.userId()
-            call.respond(articlesService.deleteArticle(slug, userId))
+            call.respond(articlesService.deleteArticle(userId, slug))
         }
 
         post("/articles/{slug}/favorite") {
             val slug = call.parameters["slug"] ?: error("Invalid request")
             val userId = call.userId()
-            call.respond(articlesService.favoriteArticle(slug, userId))
+            call.respond(articlesService.favoriteArticle(userId, slug))
         }
 
         delete("/articles/{slug}/favorite") {
             val slug = call.parameters["slug"] ?: error("Invalid request")
             val userId = call.userId()
-            call.respond(articlesService.unfavoriteArticle(slug, userId))
+            call.respond(articlesService.unfavoriteArticle(userId, slug))
+        }
+
+        post("/articles/{slug}/comments") {
+            val slug = call.parameters["slug"] ?: error("Invalid request")
+            val userId = call.userId()
+            val createCommentDto = call.receive<CommentWrapper<CreateCommentDto>>()
+            call.respond(articlesService.addComment(userId, slug, createCommentDto.comment))
+        }
+
+        delete("/articles/{slug}/comments/{id}") {
+            val slug = call.parameters["slug"] ?: error("Invalid request")
+            val userId = call.userId()
+            val commentId = call.parameters["id"]?.toLongOrNull() ?: error("Invalid request")
+            call.respond(articlesService.deleteComment(userId, slug, commentId))
         }
     }
 }
