@@ -67,5 +67,9 @@ ktlint {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(
+        libs.versions.jdk.version
+            .get()
+            .toInt(),
+    )
 }
