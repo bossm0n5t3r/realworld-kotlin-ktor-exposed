@@ -1,3 +1,5 @@
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/bossm0n5t3r/realworld-kotlin-ktor-exposed/master)
+
 # ![RealWorld Example App](logo.png)
 
 > ### [Ktor](https://github.com/ktorio/ktor/) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
