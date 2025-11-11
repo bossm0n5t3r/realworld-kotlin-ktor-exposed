@@ -12,7 +12,7 @@ hikari-version = "7.0.2"
 logback-version = "1.5.20"
 
 ktlint-gradle-version = "13.0.0"
-ktlint-version = "1.7.1"
+ktlint-version = "1.6.0"
 
 mockk-version = "1.14.6"
 
