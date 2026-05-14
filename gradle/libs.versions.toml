@@ -1,20 +1,20 @@
 [versions]
-kotlin-version = "2.2.21"
-jdk-version = "21"
-ktor-version = "3.3.1"
+kotlin-version = "2.3.21"
+jdk-version = "25"
+ktor-version = "3.4.3"
 
-koin-version = "4.1.1"
+koin-version = "4.2.1"
 
 exposed-version = "0.61.0"
 h2-version = "2.4.240"
 hikari-version = "7.0.2"
 
-logback-version = "1.5.20"
+logback-version = "1.5.32"
 
-ktlint-gradle-version = "13.0.0"
-ktlint-version = "1.6.0"
+ktlint-gradle-version = "14.2.0"
+ktlint-version = "1.8.0"
 
-mockk-version = "1.14.6"
+mockk-version = "1.14.9"
 
 [libraries]
 # Ktor
