@@ -2,7 +2,6 @@ package me.bossm0n5t3r.configurations
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.Dispatchers
 import me.bossm0n5t3r.articles.Articles
 import me.bossm0n5t3r.articles.Comments
 import me.bossm0n5t3r.articles.FavoriteArticles
@@ -10,12 +9,11 @@ import me.bossm0n5t3r.profiles.Followings
 import me.bossm0n5t3r.tags.ArticleTags
 import me.bossm0n5t3r.tags.Tags
 import me.bossm0n5t3r.users.Users
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 interface DatabaseManager {
     val database: Database
@@ -44,7 +42,7 @@ class DatabaseManagerImpl : DatabaseManager {
     override val database: Database = Database.connect(hikariDataSource())
 
     override suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO, db = database) {
+        suspendTransaction(db = database) {
             addLogger(StdOutSqlLogger)
             block()
         }

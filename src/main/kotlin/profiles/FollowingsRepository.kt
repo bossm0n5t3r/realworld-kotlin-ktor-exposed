@@ -1,7 +1,8 @@
 package me.bossm0n5t3r.profiles
 
 import me.bossm0n5t3r.configurations.DatabaseManager
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
 import java.util.UUID
 
 class FollowingsRepository(

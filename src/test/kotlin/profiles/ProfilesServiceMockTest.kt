@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 import me.bossm0n5t3r.users.UserEntity
 import me.bossm0n5t3r.users.Users
 import me.bossm0n5t3r.users.UsersRepository
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -7,7 +7,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import me.bossm0n5t3r.uitilities.PasswordEncoder
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals

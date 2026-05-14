@@ -13,7 +13,7 @@ import me.bossm0n5t3r.tags.TagsRepository
 import me.bossm0n5t3r.users.UserEntity
 import me.bossm0n5t3r.users.Users
 import me.bossm0n5t3r.users.UsersRepository
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import java.time.Instant
 import java.util.UUID
 import kotlin.test.Test
@@ -1447,7 +1447,7 @@ class ArticlesServiceMockTest {
             // Verify first article
             val article1 = result.articles.find { it.slug == "following-user1-article" }
             assertNotNull(article1)
-            assertEquals("Following User 1 Article", article1!!.title)
+            assertEquals("Following User 1 Article", article1.title)
             assertEquals("Following User 1 Description", article1.description)
             assertEquals("Following User 1 Body", article1.body)
             assertEquals(emptyList(), article1.tagList)
@@ -1463,7 +1463,7 @@ class ArticlesServiceMockTest {
             // Verify second article
             val article2 = result.articles.find { it.slug == "following-user2-article" }
             assertNotNull(article2)
-            assertEquals("Following User 2 Article", article2!!.title)
+            assertEquals("Following User 2 Article", article2.title)
             assertEquals("Following User 2 Description", article2.description)
             assertEquals("Following User 2 Body", article2.body)
             assertEquals(emptyList(), article2.tagList)

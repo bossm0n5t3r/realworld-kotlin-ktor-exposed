@@ -2,6 +2,7 @@ package me.bossm0n5t3r.articles
 
 import me.bossm0n5t3r.configurations.DatabaseManager
 import me.bossm0n5t3r.users.UserEntity
+import org.jetbrains.exposed.v1.core.eq
 import java.time.Instant
 
 class CommentsRepository(

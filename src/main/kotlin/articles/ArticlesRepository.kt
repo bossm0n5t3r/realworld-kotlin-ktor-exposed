@@ -3,8 +3,10 @@ package me.bossm0n5t3r.articles
 import me.bossm0n5t3r.configurations.DatabaseManager
 import me.bossm0n5t3r.uitilities.StringUtil.toSlug
 import me.bossm0n5t3r.users.UserEntity
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import java.time.Instant
 
 class ArticlesRepository(
