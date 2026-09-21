@@ -16,4 +16,4 @@ jobs:
           cache: 'gradle'
 
       - name: Test
-        run: ./gradlew clean ktlintCheck test
+        run: ./gradlew clean ktfmtCheck test

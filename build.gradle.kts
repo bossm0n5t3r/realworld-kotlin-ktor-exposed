@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
-    alias(libs.plugins.ktlint)
+    alias(libs.plugins.ktfmt)
 }
 
 group = "me.bossm0n5t3r"
@@ -59,11 +59,8 @@ tasks.test {
     useJUnitPlatform()
 }
 
-ktlint {
-    version.set(
-        libs.versions.ktlint.version
-            .get(),
-    )
+ktfmt {
+    kotlinLangStyle()
 }
 
 kotlin {
