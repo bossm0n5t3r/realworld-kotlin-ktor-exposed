@@ -3,9 +3,7 @@ package me.bossm0n5t3r.articles
 import io.ktor.http.Parameters
 import me.bossm0n5t3r.profiles.ProfileDto
 
-data class ArticleWrapper<T>(
-    val article: T,
-)
+data class ArticleWrapper<T>(val article: T)
 
 data class ArticlesWrapper<T>(
     val articles: List<T>,
@@ -32,7 +30,9 @@ data class ArticleFilterDto(
     val limit: Int = 20,
     val offset: Int = 0,
 ) {
-    constructor(params: Parameters) : this(
+    constructor(
+        params: Parameters
+    ) : this(
         tag = params["tag"],
         author = params["author"],
         favorited = params["favorited"],

@@ -20,19 +20,22 @@ class ArticlesService(
     ): ArticlesWrapper<ArticleDto> {
         val userEntity = userId?.let { usersRepository.getUserEntityById(it) }
         val author = articleFilterDto.author?.let { usersRepository.findUserEntityByUsername(it) }
-        val favoritedByUser = articleFilterDto.favorited?.let { usersRepository.findUserEntityByUsername(it) }
+        val favoritedByUser =
+            articleFilterDto.favorited?.let { usersRepository.findUserEntityByUsername(it) }
         val tag = articleFilterDto.tag?.let { tagsRepository.getTagOrNull(it) }
 
         val articles =
             articlesRepository
                 .getAllArticles(author, articleFilterDto.limit, articleFilterDto.offset)
                 .filter { articleEntity ->
-                    favoritedByUser == null || favoriteArticlesRepository.isFavoritedArticle(articleEntity, favoritedByUser)
-                }.filter {
-                    tag == null || tagsRepository.isArticleHasTag(it, tag)
-                }.map {
-                    getArticleDto(it, userEntity)
+                    favoritedByUser == null ||
+                        favoriteArticlesRepository.isFavoritedArticle(
+                            articleEntity,
+                            favoritedByUser,
+                        )
                 }
+                .filter { tag == null || tagsRepository.isArticleHasTag(it, tag) }
+                .map { getArticleDto(it, userEntity) }
 
         return ArticlesWrapper(articles, articles.count())
     }
@@ -44,8 +47,13 @@ class ArticlesService(
         val author = usersRepository.getUserEntityById(articleEntity.authorId)
         val articleTags = tagsRepository.getAllTagsByArticle(articleEntity).map { it.tagName }
         val favoritesCount = favoriteArticlesRepository.getFavoritesCount(articleEntity)
-        val isFavorited = currentUser?.let { favoriteArticlesRepository.isFavoritedArticle(articleEntity, it) } ?: false
-        val following = currentUser?.let { followingsRepository.isFollowing(author.id.value.toString(), it.id.value.toString()) } ?: false
+        val isFavorited =
+            currentUser?.let { favoriteArticlesRepository.isFavoritedArticle(articleEntity, it) }
+                ?: false
+        val following =
+            currentUser?.let {
+                followingsRepository.isFollowing(author.id.value.toString(), it.id.value.toString())
+            } ?: false
         val authorProfile = ProfileDto(author, following)
 
         return ArticleDto(
@@ -69,13 +77,13 @@ class ArticlesService(
     ): ArticlesWrapper<ArticleDto> {
         val userEntity = usersRepository.getUserEntityById(userId)
         val followingUsers =
-            followingsRepository
-                .getAllFollowingsByUserId(userEntity.id.value.toString())
-                .map { usersRepository.getUserEntityById(it.userId.toString()) }
+            followingsRepository.getAllFollowingsByUserId(userEntity.id.value.toString()).map {
+                usersRepository.getUserEntityById(it.userId.toString())
+            }
         val articles =
-            articlesRepository
-                .getAllArticles(followingUsers, limit, offset)
-                .map { getArticleDto(it, userEntity) }
+            articlesRepository.getAllArticles(followingUsers, limit, offset).map {
+                getArticleDto(it, userEntity)
+            }
         return ArticlesWrapper(articles, articles.count())
     }
 
@@ -146,7 +154,8 @@ class ArticlesService(
     ): CommentWrapper<CommentDto> {
         val userEntity = usersRepository.getUserEntityById(userId)
         val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
-        val commentEntity = commentsRepository.createComment(userEntity, articleEntity, createCommentDto.body)
+        val commentEntity =
+            commentsRepository.createComment(userEntity, articleEntity, createCommentDto.body)
         return CommentWrapper(getCommentDto(commentEntity, userEntity))
     }
 
@@ -156,7 +165,12 @@ class ArticlesService(
     ): CommentDto {
         val commentAuthor = usersRepository.getUserEntityById(commentEntity.userId)
         val following =
-            currentUser?.let { followingsRepository.isFollowing(commentAuthor.id.value.toString(), it.id.value.toString()) } ?: false
+            currentUser?.let {
+                followingsRepository.isFollowing(
+                    commentAuthor.id.value.toString(),
+                    it.id.value.toString(),
+                )
+            } ?: false
         val commentAuthorProfile = ProfileDto(commentAuthor, following)
         return CommentDto(commentEntity, commentAuthorProfile)
     }
@@ -168,9 +182,9 @@ class ArticlesService(
         val userEntity = userId?.let { usersRepository.getUserEntityById(it) }
         val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
         val comments =
-            commentsRepository
-                .getCommentsForArticle(articleEntity)
-                .map { getCommentDto(it, userEntity) }
+            commentsRepository.getCommentsForArticle(articleEntity).map {
+                getCommentDto(it, userEntity)
+            }
         return CommentsWrapper(comments)
     }
 
@@ -182,10 +196,9 @@ class ArticlesService(
         val userEntity = usersRepository.getUserEntityById(userId)
         val articleEntity = articlesRepository.getArticleBySlug(slug) ?: error("Article not found")
         val commentEntity =
-            commentsRepository
-                .getCommentsForArticle(articleEntity)
-                .find { it.id.value == commentId }
-                ?: error("Comment not found")
+            commentsRepository.getCommentsForArticle(articleEntity).find {
+                it.id.value == commentId
+            } ?: error("Comment not found")
         if (commentEntity.userId != userEntity.id) error("Cannot delete comment: not the author")
         commentsRepository.deleteComment(commentEntity)
     }

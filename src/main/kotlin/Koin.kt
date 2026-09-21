@@ -24,9 +24,7 @@ fun Application.configureKoin() {
     install(Koin) {
         slf4jLogger()
         modules(
-            module {
-                single<DatabaseManager> { DatabaseManagerImpl() }
-            },
+            module { single<DatabaseManager> { DatabaseManagerImpl() } },
             module {
                 single { UsersRepository(get()) }
                 single { FollowingsRepository(get()) }

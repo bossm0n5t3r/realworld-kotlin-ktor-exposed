@@ -61,7 +61,8 @@ class PasswordEncoderTest {
 
         // And when checking with a different password
         val differentPassword = "differentPassword"
-        val matchesWithDifferentPassword = passwordEncoder.matches(differentPassword, encodedPassword, salt)
+        val matchesWithDifferentPassword =
+            passwordEncoder.matches(differentPassword, encodedPassword, salt)
 
         // Then the result should be false
         assertFalse(matchesWithDifferentPassword)
@@ -79,7 +80,8 @@ class PasswordEncoderTest {
         // Then the hashed password should not be empty
         assertTrue(hashedPassword.isNotEmpty())
 
-        // And hashing the same password with the same salt should produce the same result (deterministic)
+        // And hashing the same password with the same salt should produce the same result
+        // (deterministic)
         val sameHashedPassword = passwordEncoder.hashPassword(password, salt)
         assertEquals(hashedPassword, sameHashedPassword)
 

@@ -69,8 +69,7 @@ object JwtProvider {
         try {
             val algorithm = Algorithm.ECDSA512(publicKey as ECPublicKey, privateKey as ECPrivateKey)
             val currentTimeMillis = System.currentTimeMillis()
-            JWT
-                .create()
+            JWT.create()
                 .withIssuer(issuer)
                 .withSubject(subject)
                 .withIssuedAt(Date(currentTimeMillis))
@@ -82,7 +81,12 @@ object JwtProvider {
             throw RuntimeException("Invalid key type. Expected EC keys.", e)
         }
 
-    fun createJWT(subject: String) = createJWT(hexEncodedPublicKey.toPublicKey(), hexEncodedPrivateKey.toPrivateKey(), subject = subject)
+    fun createJWT(subject: String) =
+        createJWT(
+            hexEncodedPublicKey.toPublicKey(),
+            hexEncodedPrivateKey.toPrivateKey(),
+            subject = subject,
+        )
 
     fun verifyJWT(
         token: String,
@@ -91,11 +95,7 @@ object JwtProvider {
     ): DecodedJWT =
         try {
             val algorithm = Algorithm.ECDSA512(publicKey as ECPublicKey, null)
-            val verifier: JWTVerifier =
-                JWT
-                    .require(algorithm)
-                    .withIssuer(issuer)
-                    .build()
+            val verifier: JWTVerifier = JWT.require(algorithm).withIssuer(issuer).build()
             verifier.verify(token)
         } catch (e: JWTVerificationException) {
             throw RuntimeException("Token verification failed: ${e.message}", e)

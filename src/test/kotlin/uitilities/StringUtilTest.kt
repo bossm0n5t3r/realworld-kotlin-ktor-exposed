@@ -1,8 +1,8 @@
 package me.bossm0n5t3r.uitilities
 
-import me.bossm0n5t3r.uitilities.StringUtil.toSlug
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import me.bossm0n5t3r.uitilities.StringUtil.toSlug
 
 class StringUtilTest {
     @Test

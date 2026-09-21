@@ -47,19 +47,16 @@ class DatabaseManagerImpl : DatabaseManager {
             block()
         }
 
-    private val tables = arrayOf(Users, Followings, Articles, FavoriteArticles, Tags, ArticleTags, Comments)
+    private val tables =
+        arrayOf(Users, Followings, Articles, FavoriteArticles, Tags, ArticleTags, Comments)
 
     override fun createTables() {
-        transaction(this.database) {
-            SchemaUtils.create(*tables)
-        }
+        transaction(this.database) { SchemaUtils.create(*tables) }
         LOGGER.info("{} createTables", LogResult.SUCCEEDED)
     }
 
     override fun dropTables() {
-        transaction(this.database) {
-            SchemaUtils.drop(*tables)
-        }
+        transaction(this.database) { SchemaUtils.drop(*tables) }
         LOGGER.info("{} dropTables", LogResult.SUCCEEDED)
     }
 }

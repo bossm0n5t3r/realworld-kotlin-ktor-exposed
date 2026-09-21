@@ -18,8 +18,10 @@ class UsersService(
                 loginUserDto.password,
                 userEntity.hashedPassword,
                 userEntity.salt,
-            ),
-        ) { "Invalid password" }
+            )
+        ) {
+            "Invalid password"
+        }
 
         return UserDto(userEntity)
     }
@@ -41,7 +43,8 @@ class UsersService(
         )
     }
 
-    private suspend fun getUserEntityById(id: String): UserEntity = usersRepository.getUserEntityById(id)
+    private suspend fun getUserEntityById(id: String): UserEntity =
+        usersRepository.getUserEntityById(id)
 
     suspend fun getUserById(id: String): UserDto = UserDto(getUserEntityById(id))
 
@@ -55,14 +58,20 @@ class UsersService(
 
         if (updateUserDto.email != null) {
             val existingUserWithEmail = usersRepository.findUserEntityByEmail(updateUserDto.email)
-            require(existingUserWithEmail == null || existingUserWithEmail.id.value.toString() == id) {
+            require(
+                existingUserWithEmail == null || existingUserWithEmail.id.value.toString() == id
+            ) {
                 "User with this email already registered"
             }
         }
 
         if (updateUserDto.username != null) {
-            val existingUserWithUsername = usersRepository.findUserEntityByUsername(updateUserDto.username)
-            require(existingUserWithUsername == null || existingUserWithUsername.id.value.toString() == id) {
+            val existingUserWithUsername =
+                usersRepository.findUserEntityByUsername(updateUserDto.username)
+            require(
+                existingUserWithUsername == null ||
+                    existingUserWithUsername.id.value.toString() == id
+            ) {
                 "User with this username already registered"
             }
         }
@@ -70,8 +79,7 @@ class UsersService(
         val updatedUserName = updateUserDto.username ?: userEntity.username
         val updatedEmail = updateUserDto.email ?: userEntity.email
         val updatedHashedPassword =
-            updateUserDto.password
-                ?.let { passwordEncoder.hashPassword(it, userEntity.salt) }
+            updateUserDto.password?.let { passwordEncoder.hashPassword(it, userEntity.salt) }
                 ?: userEntity.hashedPassword
         val updatedSalt = userEntity.salt
         val updatedBio = updateUserDto.bio ?: userEntity.bio

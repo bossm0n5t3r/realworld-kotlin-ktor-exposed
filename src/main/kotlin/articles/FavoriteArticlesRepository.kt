@@ -5,9 +5,7 @@ import me.bossm0n5t3r.users.UserEntity
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 
-class FavoriteArticlesRepository(
-    private val databaseManager: DatabaseManager,
-) {
+class FavoriteArticlesRepository(private val databaseManager: DatabaseManager) {
     suspend fun favoriteArticle(
         articleEntity: ArticleEntity,
         userEntity: UserEntity,
@@ -22,8 +20,10 @@ class FavoriteArticlesRepository(
         articleEntity: ArticleEntity,
         userEntity: UserEntity,
     ) = databaseManager.dbQuery {
-        FavoriteArticleEntity
-            .find { (FavoriteArticles.userId eq userEntity.id) and (FavoriteArticles.articleId eq articleEntity.id) }
+        FavoriteArticleEntity.find {
+                (FavoriteArticles.userId eq userEntity.id) and
+                    (FavoriteArticles.articleId eq articleEntity.id)
+            }
             .singleOrNull()
             ?.delete()
     }
@@ -32,19 +32,20 @@ class FavoriteArticlesRepository(
         articleEntity: ArticleEntity,
         userEntity: UserEntity,
     ) = databaseManager.dbQuery {
-        FavoriteArticleEntity
-            .find { (FavoriteArticles.userId eq userEntity.id) and (FavoriteArticles.articleId eq articleEntity.id) }
+        FavoriteArticleEntity.find {
+                (FavoriteArticles.userId eq userEntity.id) and
+                    (FavoriteArticles.articleId eq articleEntity.id)
+            }
             .empty()
             .not()
     }
 
-    suspend fun getFavoriteArticleIds(userEntity: UserEntity) =
-        databaseManager.dbQuery {
-            FavoriteArticleEntity.find { FavoriteArticles.userId eq userEntity.id }.map { it.articleId.value.toString() }
-        }
+    suspend fun getFavoriteArticleIds(userEntity: UserEntity) = databaseManager.dbQuery {
+        FavoriteArticleEntity.find { FavoriteArticles.userId eq userEntity.id }
+            .map { it.articleId.value.toString() }
+    }
 
-    suspend fun getFavoritesCount(articleEntity: ArticleEntity) =
-        databaseManager.dbQuery {
-            FavoriteArticleEntity.find { FavoriteArticles.articleId eq articleEntity.id }.count()
-        }
+    suspend fun getFavoritesCount(articleEntity: ArticleEntity) = databaseManager.dbQuery {
+        FavoriteArticleEntity.find { FavoriteArticles.articleId eq articleEntity.id }.count()
+    }
 }

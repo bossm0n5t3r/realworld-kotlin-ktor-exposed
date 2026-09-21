@@ -1,41 +1,39 @@
 package me.bossm0n5t3r.users
 
+import java.util.UUID
 import me.bossm0n5t3r.configurations.DatabaseManager
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
-import java.util.UUID
 
-class UsersRepository(
-    private val databaseManager: DatabaseManager,
-) {
+class UsersRepository(private val databaseManager: DatabaseManager) {
     suspend fun createUser(
         username: String,
         email: String,
         hashedPassword: String,
         salt: String,
     ) = databaseManager.dbQuery {
-        UserEntity
-            .new {
+        UserEntity.new {
                 this.username = username
                 this.email = email
                 this.hashedPassword = hashedPassword
                 this.salt = salt
-            }.let { UserDto(it) }
+            }
+            .let { UserDto(it) }
     }
 
-    suspend fun findUserEntityByEmail(email: String) =
-        databaseManager.dbQuery {
-            UserEntity.find { Users.email eq email }.firstOrNull()
-        }
+    suspend fun findUserEntityByEmail(email: String) = databaseManager.dbQuery {
+        UserEntity.find { Users.email eq email }.firstOrNull()
+    }
 
-    suspend fun findUserEntityByUsername(username: String) =
-        databaseManager.dbQuery {
-            UserEntity.find { Users.username eq username }.firstOrNull()
-        }
+    suspend fun findUserEntityByUsername(username: String) = databaseManager.dbQuery {
+        UserEntity.find { Users.username eq username }.firstOrNull()
+    }
 
     suspend fun getUserEntityById(id: String): UserEntity {
         val uuid = UUID.fromString(id)
-        return databaseManager.dbQuery { requireNotNull(UserEntity.findById(uuid)) { "Not found user by id $id" } }
+        return databaseManager.dbQuery {
+            requireNotNull(UserEntity.findById(uuid)) { "Not found user by id $id" }
+        }
     }
 
     suspend fun getUserEntityById(id: EntityID<UUID>) = databaseManager.dbQuery { UserEntity[id] }

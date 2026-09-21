@@ -9,7 +9,10 @@ data class CommentDto(
     val body: String,
     val author: ProfileDto,
 ) {
-    constructor(commentEntity: CommentEntity, profileDto: ProfileDto) : this(
+    constructor(
+        commentEntity: CommentEntity,
+        profileDto: ProfileDto,
+    ) : this(
         id = commentEntity.id.value,
         createdAt = commentEntity.createdAt.toString(),
         updatedAt = commentEntity.updatedAt.toString(),
@@ -18,14 +21,8 @@ data class CommentDto(
     )
 }
 
-data class CreateCommentDto(
-    val body: String,
-)
+data class CreateCommentDto(val body: String)
 
-data class CommentWrapper<T>(
-    val comment: T,
-)
+data class CommentWrapper<T>(val comment: T)
 
-data class CommentsWrapper<T>(
-    val comments: List<T>,
-)
+data class CommentsWrapper<T>(val comments: List<T>)

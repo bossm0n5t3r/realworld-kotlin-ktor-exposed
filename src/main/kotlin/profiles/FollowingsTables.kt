@@ -1,12 +1,12 @@
 package me.bossm0n5t3r.profiles
 
+import java.util.UUID
 import me.bossm0n5t3r.users.Users
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
-import java.util.UUID
 
 object Followings : UUIDTable() {
     val userId = javaUUID("user_id").references(Users.id)
@@ -17,9 +17,7 @@ object Followings : UUIDTable() {
     }
 }
 
-class FollowingEntity(
-    id: EntityID<UUID>,
-) : UUIDEntity(id) {
+class FollowingEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<FollowingEntity>(Followings)
 
     var userId by Followings.userId

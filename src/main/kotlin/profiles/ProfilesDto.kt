@@ -8,14 +8,19 @@ data class ProfileDto(
     val image: String?,
     val following: Boolean,
 ) {
-    constructor(userEntity: UserEntity) : this(
+    constructor(
+        userEntity: UserEntity
+    ) : this(
         username = userEntity.username,
         bio = userEntity.bio,
         image = userEntity.image,
         following = false,
     )
 
-    constructor(userEntity: UserEntity, isFollowing: Boolean) : this(
+    constructor(
+        userEntity: UserEntity,
+        isFollowing: Boolean,
+    ) : this(
         username = userEntity.username,
         bio = userEntity.bio,
         image = userEntity.image,
@@ -23,6 +28,4 @@ data class ProfileDto(
     )
 }
 
-data class ProfileResponse(
-    val profile: ProfileDto? = null,
-)
+data class ProfileResponse(val profile: ProfileDto? = null)

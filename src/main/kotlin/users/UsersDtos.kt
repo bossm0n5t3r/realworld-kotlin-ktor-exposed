@@ -9,7 +9,9 @@ data class UserDto(
     val bio: String,
     val image: String? = null,
 ) {
-    constructor(userEntity: UserEntity) : this(
+    constructor(
+        userEntity: UserEntity
+    ) : this(
         email = userEntity.email,
         token = JwtProvider.createJWT(userEntity.id.value.toString()),
         username = userEntity.username,
@@ -37,6 +39,4 @@ data class UpdateUserDto(
     val image: String? = null,
 )
 
-data class UserWrapper<T>(
-    val user: T,
-)
+data class UserWrapper<T>(val user: T)

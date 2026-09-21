@@ -1,5 +1,6 @@
 package me.bossm0n5t3r.articles
 
+import java.time.Instant
 import me.bossm0n5t3r.configurations.DatabaseManager
 import me.bossm0n5t3r.uitilities.StringUtil.toSlug
 import me.bossm0n5t3r.users.UserEntity
@@ -7,18 +8,14 @@ import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
-import java.time.Instant
 
-class ArticlesRepository(
-    private val databaseManager: DatabaseManager,
-) {
+class ArticlesRepository(private val databaseManager: DatabaseManager) {
     suspend fun getAllArticles(
         author: UserEntity? = null,
         limit: Int,
         offset: Int,
     ) = databaseManager.dbQuery {
-        ArticleEntity
-            .find { if (author != null) Articles.authorId eq author.id else Op.TRUE }
+        ArticleEntity.find { if (author != null) Articles.authorId eq author.id else Op.TRUE }
             .orderBy(Articles.createdAt to SortOrder.DESC)
             .offset(offset.toLong())
             .limit(limit)
@@ -32,8 +29,7 @@ class ArticlesRepository(
     ): List<ArticleEntity> {
         val authorIds = authors.map { it.id.value }
         return databaseManager.dbQuery {
-            ArticleEntity
-                .find { Articles.authorId inList authorIds }
+            ArticleEntity.find { Articles.authorId inList authorIds }
                 .orderBy(Articles.createdAt to SortOrder.DESC)
                 .offset(offset.toLong())
                 .limit(limit)
@@ -69,13 +65,11 @@ class ArticlesRepository(
         articleEntity
     }
 
-    suspend fun getArticleBySlug(slug: String) =
-        databaseManager.dbQuery {
-            ArticleEntity.find { Articles.slug eq slug }.singleOrNull()
-        }
+    suspend fun getArticleBySlug(slug: String) = databaseManager.dbQuery {
+        ArticleEntity.find { Articles.slug eq slug }.singleOrNull()
+    }
 
-    suspend fun deleteArticle(articleEntity: ArticleEntity) =
-        databaseManager.dbQuery {
-            articleEntity.delete()
-        }
+    suspend fun deleteArticle(articleEntity: ArticleEntity) = databaseManager.dbQuery {
+        articleEntity.delete()
+    }
 }

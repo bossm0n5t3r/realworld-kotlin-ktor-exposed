@@ -1,5 +1,6 @@
 package me.bossm0n5t3r.articles
 
+import java.time.Instant
 import me.bossm0n5t3r.users.Users
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -7,19 +8,28 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.LongEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
-import java.time.Instant
 
 object Comments : LongIdTable() {
     val createdAt = timestamp("createdAt").default(Instant.now())
     val updatedAt = timestamp("updatedAt").default(Instant.now())
     val body = text("body")
-    val userId = reference("user_id", Users, onUpdate = ReferenceOption.CASCADE, onDelete = ReferenceOption.CASCADE)
-    val articleId = reference("article_id", Articles, onUpdate = ReferenceOption.CASCADE, onDelete = ReferenceOption.CASCADE)
+    val userId =
+        reference(
+            "user_id",
+            Users,
+            onUpdate = ReferenceOption.CASCADE,
+            onDelete = ReferenceOption.CASCADE,
+        )
+    val articleId =
+        reference(
+            "article_id",
+            Articles,
+            onUpdate = ReferenceOption.CASCADE,
+            onDelete = ReferenceOption.CASCADE,
+        )
 }
 
-class CommentEntity(
-    id: EntityID<Long>,
-) : LongEntity(id) {
+class CommentEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<CommentEntity>(Comments)
 
     var createdAt by Comments.createdAt

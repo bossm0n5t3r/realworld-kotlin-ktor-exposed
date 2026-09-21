@@ -33,14 +33,10 @@ fun Application.configureRouting() {
     val articlesService: ArticlesService by inject()
 
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
+        get("/") { call.respondText("Hello World!") }
 
         route("/api") {
-            get {
-                call.respondText("Hello World from API!")
-            }
+            get { call.respondText("Hello World from API!") }
 
             usersApi(usersService)
             profilesApi(profilesService)

@@ -1,10 +1,10 @@
 package me.bossm0n5t3r.users
 
+import java.util.UUID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
-import java.util.UUID
 
 object Users : UUIDTable() {
     val username = varchar("username", 255).uniqueIndex()
@@ -15,9 +15,7 @@ object Users : UUIDTable() {
     val image = varchar("image", 1024).nullable()
 }
 
-class UserEntity(
-    id: EntityID<UUID>,
-) : UUIDEntity(id) {
+class UserEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<UserEntity>(Users)
 
     var username by Users.username

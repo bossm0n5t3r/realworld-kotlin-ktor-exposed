@@ -5,7 +5,5 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 
 fun Route.tagsApi(tagsService: TagsService) {
-    get("/tags") {
-        call.respond(tagsService.getAllTags())
-    }
+    get("/tags") { call.respond(tagsService.getAllTags()) }
 }

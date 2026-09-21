@@ -1,13 +1,11 @@
 package me.bossm0n5t3r.articles
 
+import java.time.Instant
 import me.bossm0n5t3r.configurations.DatabaseManager
 import me.bossm0n5t3r.users.UserEntity
 import org.jetbrains.exposed.v1.core.eq
-import java.time.Instant
 
-class CommentsRepository(
-    private val databaseManager: DatabaseManager,
-) {
+class CommentsRepository(private val databaseManager: DatabaseManager) {
     suspend fun createComment(
         userEntity: UserEntity,
         articleEntity: ArticleEntity,
@@ -22,13 +20,11 @@ class CommentsRepository(
         }
     }
 
-    suspend fun getCommentsForArticle(articleEntity: ArticleEntity) =
-        databaseManager.dbQuery {
-            CommentEntity.find { Comments.articleId eq articleEntity.id }.toList()
-        }
+    suspend fun getCommentsForArticle(articleEntity: ArticleEntity) = databaseManager.dbQuery {
+        CommentEntity.find { Comments.articleId eq articleEntity.id }.toList()
+    }
 
-    suspend fun deleteComment(commentEntity: CommentEntity) =
-        databaseManager.dbQuery {
-            commentEntity.delete()
-        }
+    suspend fun deleteComment(commentEntity: CommentEntity) = databaseManager.dbQuery {
+        commentEntity.delete()
+    }
 }

@@ -1,9 +1,5 @@
 package me.bossm0n5t3r.securities
 
-import me.bossm0n5t3r.securities.JwtProvider.ALGORITHM
-import me.bossm0n5t3r.securities.JwtProvider.ISSUER
-import me.bossm0n5t3r.securities.JwtProvider.toPrivateKey
-import me.bossm0n5t3r.securities.JwtProvider.toPublicKey
 import java.security.PrivateKey
 import java.security.PublicKey
 import kotlin.test.Test
@@ -12,6 +8,10 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import me.bossm0n5t3r.securities.JwtProvider.ALGORITHM
+import me.bossm0n5t3r.securities.JwtProvider.ISSUER
+import me.bossm0n5t3r.securities.JwtProvider.toPrivateKey
+import me.bossm0n5t3r.securities.JwtProvider.toPublicKey
 
 class JwtProviderTest {
     @Test
@@ -201,7 +201,10 @@ class JwtProviderTest {
             fail("Expected an exception to be thrown")
         } catch (e: RuntimeException) {
             // Then an exception should be thrown
-            assertTrue(e.message?.contains("Invalid token format") ?: false || e.message?.contains("Token verification failed") ?: false)
+            assertTrue(
+                e.message?.contains("Invalid token format") ?: false ||
+                    e.message?.contains("Token verification failed") ?: false
+            )
         }
 
         // Given an invalid key (not an EC key)

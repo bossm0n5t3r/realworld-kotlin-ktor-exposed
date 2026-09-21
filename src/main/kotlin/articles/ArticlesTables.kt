@@ -1,13 +1,13 @@
 package me.bossm0n5t3r.articles
 
+import java.time.Instant
+import java.util.UUID
 import me.bossm0n5t3r.users.Users
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
-import java.time.Instant
-import java.util.UUID
 
 object Articles : UUIDTable() {
     val slug = varchar("slug", 255).uniqueIndex()
@@ -19,9 +19,7 @@ object Articles : UUIDTable() {
     val updatedAt = timestamp("updated_at").default(Instant.now())
 }
 
-class ArticleEntity(
-    id: EntityID<UUID>,
-) : UUIDEntity(id) {
+class ArticleEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<ArticleEntity>(Articles)
 
     var slug by Articles.slug

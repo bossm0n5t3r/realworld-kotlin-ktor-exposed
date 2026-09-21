@@ -6,6 +6,7 @@ plugins {
 }
 
 group = "me.bossm0n5t3r"
+
 version = "0.0.1"
 
 application {
@@ -15,9 +16,7 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-repositories {
-    mavenCentral()
-}
+repositories { mavenCentral() }
 
 dependencies {
     implementation(libs.ktor.server.auth)
@@ -55,18 +54,8 @@ dependencies {
     testImplementation(libs.mockk)
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }
 
-ktfmt {
-    kotlinLangStyle()
-}
+ktfmt { kotlinLangStyle() }
 
-kotlin {
-    jvmToolchain(
-        libs.versions.jdk.version
-            .get()
-            .toInt(),
-    )
-}
+kotlin { jvmToolchain(libs.versions.jdk.version.get().toInt()) }

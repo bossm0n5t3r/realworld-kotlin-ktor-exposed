@@ -14,7 +14,11 @@ class ProfilesService(
         val fromUser =
             currentUserId?.let { usersRepository.getUserEntityById(it) }
                 ?: return ProfileResponse(ProfileDto(toUser))
-        val isFollowing = followingsRepository.isFollowing(toUser.id.value.toString(), fromUser.id.value.toString())
+        val isFollowing =
+            followingsRepository.isFollowing(
+                toUser.id.value.toString(),
+                fromUser.id.value.toString(),
+            )
         return ProfileResponse(ProfileDto(toUser, isFollowing))
     }
 
@@ -34,7 +38,10 @@ class ProfilesService(
     ): ProfileResponse {
         val toUser = usersRepository.findUserEntityByUsername(username) ?: error("User not found")
         val fromUser = usersRepository.getUserEntityById(currentUserId)
-        followingsRepository.deleteFollowing(toUser.id.value.toString(), fromUser.id.value.toString())
+        followingsRepository.deleteFollowing(
+            toUser.id.value.toString(),
+            fromUser.id.value.toString(),
+        )
         return ProfileResponse(ProfileDto(toUser, false))
     }
 }
